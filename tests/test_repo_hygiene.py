@@ -112,6 +112,8 @@ ALLOWED_SYNTHETIC = {
     "100000000",  # tests/test_beancount_export.py: a round synthetic amount
     "20250131",  # README: an example statement filename
     "20260801",  # tests/test_archive.py: an example ingest date
+    "51351879",  # the GitHub account this repository lives under; public in every
+    #             clone URL by definition, and never printed on any statement
 }
 
 

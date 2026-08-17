@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="ledgerbox logo: a ledger whose last line is a checkmark">
+  <!-- The mark is the product: ledger lines, and the bottom line has been
+       reconciled. Two fixed tones chosen to stay legible on light and dark. -->
+  <rect x="10" y="10" width="108" height="108" rx="24" fill="#2b2320"/>
+  <rect x="10" y="10" width="108" height="108" rx="24" fill="none" stroke="#b8860b" stroke-width="4"/>
+  <!-- spine -->
+  <line x1="40" y1="30" x2="40" y2="98" stroke="#6b5d52" stroke-width="4" stroke-linecap="round"/>
+  <!-- ledger rows -->
+  <line x1="52" y1="40" x2="98" y2="40" stroke="#e6dcc8" stroke-width="6" stroke-linecap="round"/>
+  <line x1="52" y1="58" x2="90" y2="58" stroke="#e6dcc8" stroke-width="6" stroke-linecap="round"/>
+  <line x1="52" y1="76" x2="94" y2="76" stroke="#6b5d52" stroke-width="6" stroke-linecap="round"/>
+  <!-- the reconciled row -->
+  <path d="M52 96 L64 106 L98 84" fill="none" stroke="#dda939" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

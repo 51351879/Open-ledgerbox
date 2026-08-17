@@ -42,7 +42,10 @@ def test_refuses_directory_that_is_a_repo(git_free_tmp: Path) -> None:
     (git_free_tmp / ".git").mkdir()
     with pytest.raises(DataDirRefused) as excinfo:
         resolve_data_dir(git_free_tmp)
-    assert str(git_free_tmp / ".git") in str(excinfo.value)
+    # Resolved on both sides: the guard prints the real path, while a hosted
+    # runner hands this test its temp directory in DOS 8.3 short form
+    # (RUNNER~1), and the two spell the same directory differently.
+    assert str((git_free_tmp / ".git").resolve()) in str(excinfo.value)
 
 
 def test_refuses_directory_inside_a_repo(git_free_tmp: Path) -> None:
