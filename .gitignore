@@ -1,0 +1,123 @@
+# ============================================================================
+#  FINANCIAL DATA — NEVER COMMIT
+# ============================================================================
+#  This is defence-in-depth only. The real control is architectural: user data
+#  lives in the OS data dir (%LOCALAPPDATA% / ~/.local/share / ~/Library),
+#  physically outside this repository. See docs/THREAT_MODEL.md.
+#
+#  NOTE: .gitignore does NOT apply to already-tracked files. If something
+#  slipped in, `git rm --cached <path>` is required as well.
+# ============================================================================
+
+# Local data directories (portable mode / --data-dir pointed here)
+/data/
+/archive/
+/inbox/
+/exports/
+/backups/
+/statements/
+
+# Statement & transaction file formats
+*.pdf
+*.ofx
+*.qfx
+*.qbo
+*.qif
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.xlsm
+*.mt940
+*.camt
+*.sta
+
+# Extraction cache. `extracted/<sha>.ndjson` is the *whole* text layer of a
+# statement -- account number, legal name, street address, every counterparty.
+# It is the most damaging single file the data directory holds, and it was
+# missing from every list in this project until an independent review named it.
+*.ndjson
+
+# Databases
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.duckdb
+*.parquet
+
+# Plain-text ledger exports (may contain real balances)
+*.beancount
+*.ledger
+*.journal
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+token.json
+
+# ---------------------------------------------------------------------------
+# Re-included: synthetic and redacted test fixtures ONLY.
+#
+# Narrow on purpose. A span JSON captured from a real statement contains the
+# full account number, legal name, street address and every counterparty name —
+# `tests/fixtures/**/*.json` would have waved all of that straight through. The
+# redactor (tools/sanitize.py) does not exist yet, so until it does the only
+# committable fixtures are ones that never had real data in them.
+#
+# Kept under separately-named paths because git never descends into an excluded
+# directory — you cannot re-include a file whose parent is ignored.
+# ---------------------------------------------------------------------------
+# JSON is not in the format list above, so span dumps had to be excluded here
+# before any re-inclusion could mean anything. Without this line the three `!`
+# rules below were decoration and a real span dump — full account number, legal
+# name, street address, every counterparty — would go in on `git add .`.
+tests/fixtures/**/*.json
+
+!tests/fixtures/synthetic/**/*.csv
+!tests/fixtures/synthetic/**/*.pdf
+!tests/fixtures/synthetic/**/*.json
+!tests/fixtures/synthetic/**/*.ofx
+!tests/fixtures/malformed/**/*.pdf
+!tests/fixtures/malformed/**/*.json
+
+# Redacted span fixtures must say so in the filename: `*.redacted.json`.
+!tests/fixtures/spans/*.redacted.json
+
+# ============================================================================
+#  Python
+# ============================================================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ============================================================================
+#  Editors / OS
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# The local answer to "where does my data live" for start-ledgerbox.cmd.
+# One line, a path, this machine only. Never committed.
+data-dir.txt

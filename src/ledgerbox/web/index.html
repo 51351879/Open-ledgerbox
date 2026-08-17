@@ -1,0 +1,385 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>ledgerbox</title>
+  <!-- Same-origin only. The server sends default-src 'self', so an inline
+       script or an off-origin URL would simply not load. Nothing here is
+       fetched from anywhere: the page works with the cable unplugged. That is
+       also why the restyle takes the operator's palette and layout but not
+       their font service or their charting CDN. -->
+  <!-- Cut at the seams the 400-line signal in EXECUTION_PLAN §1.3 forced, and
+       by job rather than by size: tokens are the vocabulary, app is the
+       furniture, status is the page reporting on itself, records is the one row
+       shape five modules render n times, and the last two are dense regions
+       that were already their own files. (It said "Five sheets" while there
+       were six: the smallest possible instance of what two acceptance rounds
+       spent their time on.) -->
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/css/status.css">
+  <link rel="stylesheet" href="/static/css/records.css">
+  <link rel="stylesheet" href="/static/css/transactions.css">
+  <link rel="stylesheet" href="/static/css/large-flows.css">
+  <link rel="stylesheet" href="/static/css/agent-proposals.css">
+  <link rel="stylesheet" href="/static/css/agent-center.css">
+  <link rel="stylesheet" href="/static/css/triage.css">
+  <link rel="stylesheet" href="/static/css/charts.css">
+  <script type="module" src="/static/js/main.js"></script>
+</head>
+<body>
+
+<!-- Title left, controls right, on the operator's own header bar. "Add
+     statements" is a `<details>` and not a button that pretends: the summary is
+     a control the browser already focuses, names and announces, and it reveals
+     the same drop zone that has always been there. Page-wide drag and drop is
+     wired on `document` in upload.js and does not consult this disclosure, so a
+     file dropped anywhere still uploads whether it is open or shut; main.js
+     opens it when files are enqueued so the result cards are not rendered
+     inside something closed. -->
+<header class="masthead">
+  <div class="container masthead__bar">
+    <div>
+      <h1 class="wordmark">ledgerbox</h1>
+      <p class="tagline">A local ledger that refuses to show numbers it cannot prove.</p>
+    </div>
+    <div class="masthead__controls">
+      <!-- Whether the local service is answering, in the one place it is said.
+           connection.js has the reasoning and the wording; it is a live region
+           so that losing the server is announced, and it fires on transitions
+           only so the heartbeat cannot announce "Connected" forever. -->
+      <p id="link" class="link link--unknown" aria-live="polite"></p>
+      <details id="adder" class="adder">
+        <summary class="adder__toggle">Add statements</summary>
+        <div class="adder__panel">
+          <div class="adder__head">
+            <h2 id="upload-h" class="adder__title">Add statements</h2>
+            <button type="button" id="clear-results" class="btn btn--quiet">Clear results</button>
+          </div>
+          <div id="dropzone" class="dropzone">
+            <p class="dropzone__lead">Drop statement PDFs anywhere on this page</p>
+            <p class="dropzone__sub">
+              One request per file, in order. Each statement is reconciled against its own
+              printed totals before a single transaction is booked.
+            </p>
+            <button type="button" id="choose" class="btn">Choose files</button>
+            <input id="file-input" class="visually-hidden" type="file"
+                   accept="application/pdf,.pdf" multiple>
+          </div>
+          <div id="results" class="results" aria-live="polite"></div>
+        </div>
+      </details>
+      <!-- The window every figure below is measured over: the four figures,
+           both charts and the transaction table all send it, so the page
+           describes one window or none of it can be checked against the rest.
+           These are transaction dates — when the money moved. The Month control
+           on the table asks which statement a line is printed on, which is a
+           different question, and the two are labelled rather than merged. -->
+      <label class="range" id="range">
+        <span class="visually-hidden">Date range</span>
+        <select data-range="preset" class="control__field"></select>
+      </label>
+      <!-- On the control row rather than under the wordmark. It only appears
+           for "Custom", so the row grows sideways when it does and the page
+           below never moves; putting it under the title made a second control
+           strip out of the one place a reader looks for the tool's name. -->
+      <div class="range__custom" data-range="custom" hidden>
+        <label class="range__field">
+          <span class="range__key">From</span>
+          <input type="date" data-range="since">
+        </label>
+        <label class="range__field">
+          <span class="range__key">To</span>
+          <input type="date" data-range="until">
+        </label>
+      </div>
+      <button type="button" id="refresh" class="btn btn--quiet">Refresh</button>
+    </div>
+  </div>
+  <div class="container notice notice--fail" data-range="notice" hidden></div>
+</header>
+
+<!-- Persistent page directory in the wide left margin. JavaScript replaces
+     this fallback with live Agent evidence and actionable counts; the links
+     themselves work before that happens and remain ordinary anchors. -->
+<aside id="workspace-sidebar" class="workspace-sidebar" aria-label="Ledger navigation and Agent connection">
+  <div class="sidebar__panel">
+    <p class="sidebar__eyebrow">This ledger</p>
+    <p class="sidebar__loading">Reading Agent connection…</p>
+    <nav class="sidebar-nav" aria-label="On this page">
+      <a href="#ledger">Overview</a>
+      <a href="#analytics">Charts</a>
+      <a href="#transactions">Transactions</a>
+      <a href="#large-flows">Large flows</a>
+      <a href="#agent-proposals">Agent proposals</a>
+      <a href="#agent-triage">Coverage triage</a>
+      <a href="#statement-history">Statements</a>
+      <a href="#advice">Planning notes</a>
+      <a href="#review-queue">Review queue</a>
+    </nav>
+  </div>
+</aside>
+
+<main class="container">
+
+  <!-- Above the figures rather than beside them: it is the one line that says a
+       statement was refused, and a refusal is the reason a figure below is
+       smaller than somebody expects. It says nothing at all when there is
+       nothing wrong, which is what keeps it worth reading. -->
+  <section id="status" class="status" aria-label="Service status" aria-live="polite"></section>
+
+  <!-- The four figures come first because they are the answer. Everything else
+       on this page exists to produce them or to explain why they are not there
+       yet. -->
+  <section id="ledger" class="ledger" aria-label="Ledger totals" aria-live="polite">
+    <p class="ledger__empty">Reading the local ledger…</p>
+  </section>
+
+  <!-- Directly under the figures and above the table. main.js's header has the
+       ranking argument in full; the short version is that the table shows one
+       page of a filtered query while these are the whole booked ledger, and the
+       complete statement outranks the partial one. Nothing is filtered out of
+       either picture: the lines no rule claimed keep a labelled, hatched slice
+       rather than being swept into an "other". -->
+  <section id="analytics" class="charts" aria-labelledby="analytics-h">
+    <!-- Head and note are built by analytics.js; see there. -->
+    <!-- The note is built by analytics.js: it states what these two pictures
+         count, which is the module's own claim to keep true. -->
+    <div data-chart="empty" class="chart" hidden></div>
+
+    <div data-chart="body" class="charts__grid">
+
+      <article class="chart">
+        <div class="chart__head">
+          <h3 class="chart__title">Month by month</h3>
+        </div>
+        <p class="chart__lede">
+          One column per <strong>transaction</strong> month — when the money moved, which
+          is not the statement month the table's filter below means. Money in above the
+          zero line, money out below it, on one shared scale. A month that ended up has
+          the taller half above.
+        </p>
+        <div class="chart-wrapper chart-scroll">
+          <!-- The shell is markup and is not created in JavaScript, because
+               `document.createElementNS` needs the SVG namespace spelled out and
+               that literal is an off-origin URL as far as
+               `test_the_frontend_requests_nothing_off_origin` is concerned — a
+               guard that reads every file under web/ with no exclusions, and is
+               right to. The HTML parser puts this element in the SVG namespace
+               by itself, no xmlns attribute needed, and `charts.js` reads the
+               namespace back off it to build every child. -->
+          <svg data-chart="monthly" class="chart__svg" role="img"
+               aria-label="Money in and out for each transaction month."></svg>
+        </div>
+        <div class="chart-keys">
+          <span class="chart-key">
+            <span class="chart-key__swatch chart-key__swatch--in"></span>
+            <span>In, above the line</span>
+          </span>
+          <span class="chart-key">
+            <span class="chart-key__swatch chart-key__swatch--out"></span>
+            <span>Out, below the line</span>
+          </span>
+        </div>
+        <div data-chart="monthly-note"></div>
+        <!-- The text equivalent, in the shape the Diagnostics disclosure at the
+             bottom of the page established. Every figure drawn above is in it,
+             plus the server's own totals. A picture nobody can read is not an
+             accessible picture with a label on it. -->
+        <details class="chart__more">
+          <summary class="chart__summary">Every month as figures, including the totals</summary>
+          <div data-chart="monthly-table" class="chart__more-body"></div>
+        </details>
+      </article>
+
+      <article class="chart">
+        <div class="chart__head">
+          <h3 class="chart__title">What was spent, by category</h3>
+        </div>
+        <p class="chart__lede">
+          The hatched slice is <strong>not a category</strong>: it is the lines no rule
+          claimed and nobody overruled. It is drawn differently, listed by name, and
+          never called "other" — a catch-all bucket is how a breakdown that covers a
+          third of a ledger comes to look complete. Small slices are drawn small;
+          nothing here is inflated to be visible, which is what the list beside the
+          chart is for. A legend percentage is the share of <strong>spending amount</strong>,
+          not the share of transactions. When a bucket is switched off, the visible wedges and
+          visible percentages are rebalanced against the visible spending; the full-ledger
+          coverage statement below the chart still reports both amount and line count.
+        </p>
+        <div class="donut">
+          <svg data-chart="donut" class="donut__svg" viewBox="0 0 220 220" role="img"
+               aria-label="Share of spending by category.">
+            <defs>
+              <!-- Texture rather than a hue, so the absence of a decision does not
+                   read as one more entry in a series of categories. Both tokens
+                   flip with the theme, so it stays legible in either. -->
+              <pattern id="chart-unclaimed" width="8" height="8"
+                       patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <rect class="hatch__ground" width="8" height="8"></rect>
+                <line class="hatch__rule" x1="2" y1="0" x2="2" y2="8"></line>
+              </pattern>
+            </defs>
+            <g data-chart="wedges"></g>
+          </svg>
+          <!-- Persistent and in the default view, not behind the disclosure. Three
+               of the four buckets on a real ledger are wedges of 7, 3 and 2
+               degrees; without a row each they would be three buckets nobody can
+               see or name. -->
+          <div data-chart="legend" class="legend"></div>
+        </div>
+        <p data-chart="cat-total" class="chart__total"></p>
+      </article>
+
+      <!-- The ranked-bar view of the same slices stood here and was removed at
+           the owner's request: the legend beside the donut already carries every
+           bucket by name with its share, its amount and its line count, so the
+           bars were a second drawing of a list that was already complete. What
+           they were for — keeping a 0.2% bucket readable — the legend does with
+           text, which is the stronger version of the same argument. -->
+
+    </div>
+  </section>
+
+  <!-- Under the pictures because it is what they were drawn from, and above the
+       statement list because the list is where these lines came from: figures,
+       then the lines behind them, then the files behind those. Every control
+       issues a request; nothing here is filtered in the browser. -->
+  <section id="transactions" class="panel" aria-labelledby="txn-h">
+    <div class="panel__head">
+      <h2 id="txn-h" class="panel__title">Transactions</h2>
+      <p id="txn-counts" class="panel__meta"></p>
+    </div>
+    <p class="panel__note">
+      Every booked line, worded exactly as the bank printed it. A category shown as
+      <strong>—</strong> is a line <strong>no rule claimed</strong>, and there is no
+      catch-all bucket for it to fall into: it stays empty rather than being swept into an
+      "other" that would look, in any chart, exactly like a category something matched on
+      purpose. Each row says whether a rule or a person answered.
+      The three figures under the controls are the <strong>bank leg</strong> — what these
+      lines did to this account's balance, transfers included. The four at the top of the
+      page read the <strong>income and expense legs</strong> instead, and leave out transfers
+      and the opening balance. Different questions, so
+      <strong>the two line up only while this list holds the lines those four count</strong>
+      — which it does before you filter anything, on a ledger with no transfers marked.
+    </p>
+
+    <!-- The filter module owns the native labels, controls, option defaults and
+         listeners. This page owns only the place the component belongs. -->
+    <div data-txn="controls" class="controls"></div>
+
+    <div data-txn="notice" class="notice notice--fail" hidden></div>
+    <div data-txn="totals" class="txn-totals"></div>
+    <!-- The visible totals remain navigable but are not re-announced as one
+         500+ character block after every search. Only the short result state is
+         live, and transactions.js writes it only when the sentence changes. -->
+    <p data-txn="status" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>
+    <!-- No aria-live on the rows: a page of re-announced lines on every keystroke is
+         not an announcement. The figures and the server's sentence above carry
+         the change, and the container reports aria-busy while it loads. -->
+    <div data-txn="rows" class="txn-rows"></div>
+    <div data-txn="pager" class="pager"></div>
+  </section>
+
+  <!-- Big money gets one human look. Anything at least $1,000 whose category
+       came from a rule, a learned rule, or an Agent - or from nobody - waits
+       here until a person confirms or changes it. Confirmation goes through
+       the same override path as any decision, so it also teaches. -->
+  <section id="large-flows" class="panel" aria-labelledby="large-flows-h">
+    <div class="panel__head">
+      <h2 id="large-flows-h" class="panel__title">Large flows</h2>
+      <p id="large-flows-counts" class="panel__meta"></p>
+    </div>
+  </section>
+
+  <!-- Audit proposals produced by a local tool the user chose to run. The
+       module owns the review controls and current-fact rows; this shell only
+       ranks the panel after the transaction table whose categories it may
+       change. It invokes no model; v2 automatic outcomes still remain here as
+       inspectable, withdrawable audit. -->
+  <section id="agent-proposals" class="panel"></section>
+
+  <!-- Exhaustive Agent-produced routing for the rows still unclassified after
+       proposal review. It is a second audit workflow, not another category
+       proposal screen: gap and uncertain decisions deliberately stay empty. -->
+  <section id="agent-triage" class="panel"></section>
+
+  <!-- Provenance, ranked under the money: this is where every line in the table
+       above came from. Above the queue for the reason it always was — the queue
+       makes its claims *about* these rows, so you read the object and then its
+       problems — and the status strip at the top already shouts when the queue
+       is not empty, so ranking the list first hides nothing. -->
+  <!-- Folded by default, with the count left in the summary so a statement that
+       booked nothing is announced without anybody opening anything. -->
+  <section id="statement-history" class="panel" aria-labelledby="statements-h">
+    <details id="statements-panel" class="panel__fold">
+      <summary class="panel__summary">
+        <span id="statements-h" class="panel__title">Statements</span>
+        <span id="statements-counts" class="panel__meta"></span>
+      </summary>
+      <p class="panel__note">
+        Every file that reached the archive, newest period first. A statement showing
+        <strong>0 transactions</strong> is in the archive and <strong>not in the ledger</strong>:
+        none of its money is in the figures at the top of this page. Delete asks the server
+        what it would remove and shows you that first; nothing is written until you confirm.
+      </p>
+      <div class="statements__controls">
+        <label class="control control--wide">
+          <span class="control__key">Search these statements</span>
+          <input data-stmt="q" type="search" class="control__field" maxlength="120"
+                 placeholder="month, institution or id">
+        </label>
+      </div>
+      <div data-stmt="notice" class="empty" hidden></div>
+      <div id="statements" class="statements" aria-live="polite"></div>
+      <div data-stmt="pager" class="pager"></div>
+    </details>
+  </section>
+
+  <!-- General guidance, and the last thing on the page for a reason: everything
+       above it is measured, and this is not. It is the one region that is not a
+       reading of this ledger, so it sits after all of them and says what it can
+       and cannot see rather than being ranked among things that can be proved. -->
+  <!-- Empty on purpose: the copy *is* the panel, so `advice.js` builds it,
+       beside the reasoning that constrains what it may say. -->
+  <section id="advice" class="panel" aria-labelledby="advice-h"></section>
+
+  <!-- Last of the sections that are about the data, because it is the only one
+       that is about what did *not* get in. -->
+  <section id="review-queue" class="panel" aria-labelledby="queue-h">
+    <div class="panel__head">
+      <h2 id="queue-h" class="panel__title">Review queue</h2>
+      <p id="queue-counts" class="panel__meta"></p>
+    </div>
+    <!-- Note built by review.js, beside the code that honours it. -->
+    <div id="queue" class="queue" aria-live="polite"></div>
+  </section>
+
+</main>
+
+<!-- Table row counts and version strings are diagnostics: ranked below
+     everything about the money, under a disclosure, and never removed. -->
+<details id="diagnostics" class="container diag">
+  <summary>Diagnostics: table rows, schema version, where the data lives</summary>
+  <div id="diagnostics-body" class="diag__body"></div>
+</details>
+
+<footer class="container colophon">
+  <p>
+    Runs on this machine only. No account, no telemetry, no outbound request:
+    your statements never leave this computer.
+  </p>
+</footer>
+
+<noscript>
+  <p class="container noscript">
+    ledgerbox needs JavaScript. The whole interface is a few plain modules served
+    from this machine; nothing is loaded from anywhere else.
+  </p>
+</noscript>
+
+</body>
+</html>

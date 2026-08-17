@@ -1,0 +1,108 @@
+[build-system]
+# >=1.27 is the floor for PEP 639 support (SPDX `license` string plus
+# `license-files`). Anything older silently mis-handles the license metadata.
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ledgerbox"
+version = "0.0.1a0"
+description = "A local-first personal ledger that refuses to give you numbers it cannot prove."
+readme = "README.md"
+requires-python = ">=3.11"
+
+# PEP 639: SPDX expression, not the deprecated table/classifier forms. AGPL is a
+# deliberate decision (EXECUTION_PLAN.md §9.4, §12) and has to stay pinned down
+# before the first external PR: contributions accepted under AGPL with DCO and
+# no CLA can never be relicensed without every contributor's agreement.
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+
+# Runtime dependencies are kept deliberately small: this has to still install
+# years from now. Five, as planned (EXECUTION_PLAN §1.1). The web trio became
+# required in P1 rather than optional, because `uvx ledgerbox` with no arguments
+# now starts the server and opens a browser — the documented first experience
+# cannot depend on an extra the newcomer has not heard of.
+#
+# `ledgerbox ingest` still does not import any of them: cli.cmd_serve is the
+# only place they are imported, and it does so inside the function. A headless
+# or cron install can therefore strip them and everything but `serve` keeps
+# working.
+dependencies = [
+    "fastapi>=0.110",
+    "pdfplumber>=0.11",
+    "platformdirs>=4.0",
+    "python-multipart>=0.0.9",
+    "uvicorn>=0.29",
+]
+
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Office/Business :: Financial :: Accounting",
+]
+
+[project.optional-dependencies]
+mcp = [
+    # v1 is the stable SDK line. v2 remains pre-release and intentionally is
+    # not selected implicitly, so protocol changes cannot silently cross this
+    # local financial-data boundary.
+    "mcp>=1.27,<2",
+]
+dev = [
+    "pytest>=8",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    # fastapi.testclient is built on httpx; without it the API tests cannot
+    # even be collected. Declared here rather than assumed present.
+    "httpx>=0.27",
+    # Tests exercise the optional STDIO adapter without making it a base
+    # dependency for people who classify manually.
+    "mcp>=1.27,<2",
+]
+
+[project.scripts]
+ledgerbox = "ledgerbox.cli:main"
+ledgerbox-mcp = "ledgerbox.agent_mcp:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ledgerbox"]
+
+# The checkout Skills are the canonical source. Map them into the installed
+# package instead of maintaining a second copied tree under src/. The runner
+# uses this self-contained project workspace when no source checkout exists.
+[tool.hatch.build.targets.wheel.force-include]
+".agents/skills/ledgerbox/SKILL.md" = "ledgerbox/_agent_workspace/.agents/skills/ledgerbox/SKILL.md"
+".agents/skills/ledgerbox/agents" = "ledgerbox/_agent_workspace/.agents/skills/ledgerbox/agents"
+".agents/skills/ledgerbox/references" = "ledgerbox/_agent_workspace/.agents/skills/ledgerbox/references"
+".agents/skills/ledgerbox-triage" = "ledgerbox/_agent_workspace/.agents/skills/ledgerbox-triage"
+".claude/skills/ledgerbox" = "ledgerbox/_agent_workspace/.claude/skills/ledgerbox"
+".claude/skills/ledgerbox-triage" = "ledgerbox/_agent_workspace/.claude/skills/ledgerbox-triage"
+"docs/AGENT_CONTRACT.md" = "ledgerbox/_agent_workspace/docs/AGENT_CONTRACT.md"
+"docs/TRIAGE_AGENT_CONTRACT.md" = "ledgerbox/_agent_workspace/docs/TRIAGE_AGENT_CONTRACT.md"
+"docs/AGENT_SETUP.md" = "ledgerbox/_agent_workspace/docs/AGENT_SETUP.md"
+
+[tool.pytest.ini_options]
+# "." so `tools/` is importable: the hygiene tests exercise
+# tools/check_repo_data.py directly rather than shelling out to it, because a
+# gate nobody has watched fail has not been tested.
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+# `tools/` too: check_repo_data.py is a gate that runs in CI, and a gate nobody
+# type-checks is a gate that can fail on a typo in its own error path.
+files = ["src/ledgerbox", "tools"]

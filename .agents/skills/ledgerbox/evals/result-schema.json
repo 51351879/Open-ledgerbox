@@ -1,0 +1,50 @@
+{
+  "title": "Ledgerbox official Classification Skill synthetic result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "skill_origin", "skill_version", "client", "cases"],
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "skill_origin": {"type": "string", "const": "official"},
+    "skill_version": {"type": "string", "const": "official-classification-v1"},
+    "client": {"type": "string", "enum": ["codex", "claude-code"]},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "outcome", "tools", "groups", "omitted_refs", "pending_human_review", "final_summary"],
+        "properties": {
+          "case_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+          "outcome": {"type": "string", "enum": ["stopped", "submitted", "omitted"]},
+          "tools": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["category_id", "candidate_refs"],
+              "properties": {
+                "category_id": {"type": "string"},
+                "candidate_refs": {
+                  "type": "array",
+                  "items": {"type": "string", "pattern": "^syn-[a-z0-9-]+$"}
+                }
+              }
+            }
+          },
+          "omitted_refs": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^syn-[a-z0-9-]+$"}
+          },
+          "pending_human_review": {"type": "boolean"},
+          "final_summary": {"type": "string"}
+        }
+      }
+    }
+  }
+}

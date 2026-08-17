@@ -1,0 +1,58 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+
+   What the page says about itself: whether the service is answering, and what
+   is wrong with the ledger. Two different questions and they are ranked that
+   way on screen -- the light is in the header because it is about the process,
+   the strip is above the figures because it is about the numbers under it.
+
+   Cut out of app.css when the connection light arrived and app.css was two
+   lines under the 400-line signal. By job rather than by size: everything here
+   is the page reporting on its own state, and nothing else in app.css is. */
+
+/* --- the connection light ------------------------------------------------- */
+
+/* Three states and the words change with all three, so the dot is a second
+   reading of something already said rather than the only thing saying it. That
+   is the same rule the statement list follows for a refused statement and the
+   donut for its unclaimed slice: colour is never the only encoding. */
+
+.link {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  margin: 0; font-size: 13px; color: var(--ink-2);
+}
+.link__dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--ink-3); flex: 0 0 auto;
+  /* Aligned to the text baseline rather than centred on the line box, so it
+     sits with the word instead of floating above it at large text sizes. */
+  transform: translateY(-1px);
+}
+.link__label { font-weight: 600; }
+.link--up .link__dot { background: var(--ok); }
+.link--up .link__label { color: var(--ok); }
+.link--down .link__dot { background: var(--fail); }
+.link--down .link__label { color: var(--fail); }
+
+/* The one explanation of a server that is not answering, on the whole page.
+   It wraps onto its own line under the light rather than stretching the header
+   bar, which is what the flex-basis is for: at 380px the control row is already
+   the tightest thing here. */
+.link__aside {
+  flex: 1 0 100%;
+  max-width: 46ch;
+  color: var(--ink-2); font-weight: 400;
+}
+
+/* --- the one status line, loud only when something is wrong --------------- */
+
+.status {
+  display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: baseline;
+  margin-bottom: 16px;
+  font-size: 13px; color: var(--ink-2);
+}
+.status:empty { margin-bottom: 0; }
+.status__flag { font-weight: 600; }
+.status__flag--ok { color: var(--ok); }
+.status__flag--warn { color: var(--warn); }
+.status__flag--fail { color: var(--fail); }
+.status__error { color: var(--fail); font-weight: 600; }

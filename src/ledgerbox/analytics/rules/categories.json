@@ -1,0 +1,401 @@
+{
+  "version": 1,
+  "note": "Rules are data, not code, and they are written from general knowledge of nationally known brands and structural banking phrases -- never harvested from anybody's statements. The predecessor to this project hardcoded roughly sixty local merchant names and one card's last four digits as category keywords, which put personally identifying information inside the logic where deleting the data could not remove it. A local business name, a person's name, a city, a street or any digit string from a real descriptor does not belong in this file. See docs/STATUS.md 6.5. Transfer-kind categories are held to a stricter standard than the rest: matching one takes money out of the headline income and expense totals, so a wrong match hides real spending. Every automatic pattern in 'transfer' names both a mechanism (transfer, payment) and an account only its owner can send to (savings, checking, brokerage, a credit card). A bare 'zelle', 'autopay' or 'transfer to' is not in it and is not an oversight -- most Zelle is a real payment to another person, most autopay is a real bill, and neither a self-Zelle nor an outbound wire announces itself in the descriptor. 'investment' is deliberately patternless because a platform descriptor alone does not distinguish principal, proceeds, fees, rewards or purchases. Those decisions are left for a person or a proposal-only local Agent to make.",
+  "categories": [
+    {
+      "id": "fees",
+      "kind": "expense",
+      "priority": 10,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "service fee",
+            "maintenance fee",
+            "overdraft",
+            "insufficient funds",
+            "returned item fee",
+            "counter check",
+            "wire fee",
+            "foreign transaction fee",
+            "atm fee",
+            "late fee"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cash",
+      "kind": "expense",
+      "priority": 20,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["cash withdrawal", "atm"]
+        }
+      ]
+    },
+    {
+      "id": "housing",
+      "kind": "expense",
+      "priority": 30,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["rent", "mortgage", "property management", "leasing office"]
+        }
+      ]
+    },
+    {
+      "id": "utilities",
+      "kind": "expense",
+      "priority": 40,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "utilities",
+            "electric bill",
+            "comcast",
+            "xfinity",
+            "verizon",
+            "t-mobile",
+            "spectrum",
+            "internet service"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "subscriptions",
+      "kind": "expense",
+      "priority": 50,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "netflix",
+            "spotify",
+            "hulu",
+            "youtube premium",
+            "apple.com/bill",
+            "microsoft 365",
+            "adobe",
+            "dropbox",
+            "patreon",
+            "openai",
+            "anthropic",
+            "github"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dining",
+      "kind": "expense",
+      "priority": 60,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "restaurant",
+            "starbucks",
+            "chipotle",
+            "mcdonald",
+            "dunkin",
+            "doordash",
+            "uber eats",
+            "ubereats",
+            "grubhub",
+            "postmates",
+            "pizza",
+            "cafe",
+            "coffee",
+            "bakery",
+            "sushi",
+            "taco",
+            "diner",
+            "brewing",
+            "bar and grill"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "groceries",
+      "kind": "expense",
+      "priority": 70,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "grocery",
+            "supermarket",
+            "whole foods",
+            "trader joe",
+            "safeway",
+            "kroger",
+            "aldi",
+            "publix",
+            "wegmans",
+            "sprouts",
+            "costco"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transport",
+      "kind": "expense",
+      "priority": 80,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "uber",
+            "lyft",
+            "gas station",
+            "fuel",
+            "shell oil",
+            "chevron",
+            "exxon",
+            "parking",
+            "toll",
+            "transit authority",
+            "autozone",
+            "car wash"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "travel",
+      "kind": "expense",
+      "priority": 90,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "airlines",
+            "airline",
+            "hotel",
+            "marriott",
+            "hilton",
+            "airbnb",
+            "expedia",
+            "booking.com",
+            "car rental",
+            "hertz",
+            "avis"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "kind": "expense",
+      "priority": 100,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "pharmacy",
+            "walgreens",
+            "dental",
+            "dentist",
+            "medical",
+            "clinic",
+            "hospital",
+            "optometry",
+            "urgent care"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sport",
+      "kind": "expense",
+      "priority": 105,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["crunch"]
+        }
+      ]
+    },
+    {
+      "id": "pet",
+      "kind": "expense",
+      "priority": 95,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "veterinary",
+            "veterinarian",
+            "animal hospital",
+            "pet hospital",
+            "pet clinic",
+            "petco",
+            "petsmart"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "insurance",
+      "kind": "expense",
+      "priority": 110,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["insurance", "geico", "state farm", "allstate"]
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "kind": "expense",
+      "priority": 120,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["tuition", "university", "college", "coursera", "student loan"]
+        }
+      ]
+    },
+    {
+      "id": "taxes",
+      "kind": "expense",
+      "priority": 130,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["tax payment", "franchise tax", "dept of revenue", "irs"]
+        }
+      ]
+    },
+    {
+      "id": "entertainment",
+      "kind": "expense",
+      "priority": 135,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["nintendo", "steam games"]
+        }
+      ]
+    },
+    {
+      "id": "shopping",
+      "kind": "expense",
+      "priority": 140,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "amazon",
+            "target",
+            "walmart",
+            "best buy",
+            "ikea",
+            "home depot",
+            "lowes",
+            "etsy",
+            "ebay",
+            "nordstrom"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "salary",
+      "kind": "income",
+      "priority": 10,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["payroll", "direct deposit", "direct dep", "salary", "gusto", "paychex", "adp"]
+        }
+      ]
+    },
+    {
+      "id": "interest",
+      "kind": "income",
+      "priority": 20,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["interest payment", "interest paid", "dividend"]
+        }
+      ]
+    },
+    {
+      "id": "refund",
+      "kind": "income",
+      "priority": 30,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["refund", "reversal", "return credit"]
+        }
+      ]
+    },
+    {
+      "id": "cash-deposit",
+      "kind": "income",
+      "priority": 35,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": ["cash deposit"]
+        }
+      ]
+    },
+    {
+      "id": "rewards",
+      "kind": "income",
+      "priority": 40,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "cash redemption",
+            "rewards redemption",
+            "credit card reward",
+            "cash back reward",
+            "cashback reward"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transfer",
+      "kind": "transfer",
+      "priority": 10,
+      "rules": [
+        {
+          "type": "word",
+          "patterns": [
+            "credit card payment",
+            "payment to credit card",
+            "transfer to savings",
+            "transfer from savings",
+            "transfer to checking",
+            "transfer from checking",
+            "transfer to brokerage",
+            "internal transfer",
+            "overdraft protection transfer",
+            "pay in 4"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "investment",
+      "kind": "transfer",
+      "priority": 20,
+      "rules": []
+    }
+  ]
+}

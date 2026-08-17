@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ledgerbox coverage triage"
+  short_description: "Triage unanswered local Ledgerbox transactions"
+  default_prompt: "Use $ledgerbox-triage to route every unanswered Ledgerbox transaction for human review."

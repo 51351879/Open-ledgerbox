@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ledgerbox proposals"
+  short_description: "Prepare local classification proposals for review"
+  default_prompt: "Use $ledgerbox to prepare pending classification proposals for my local Ledgerbox."

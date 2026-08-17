@@ -1,0 +1,59 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/*
+ * The large-flows board. One row per large line awaiting a person's look;
+ * the amount leads because size is the whole reason the row is here.
+ */
+
+.large-flows__intro {
+  margin: 0 0 10px;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.large-flows__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.large-flows__row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.large-flows__amount {
+  font-weight: 700;
+  min-width: 7em;
+  text-align: right;
+}
+
+.large-flows__date {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.large-flows__descriptor {
+  flex: 1 1 16em;
+  overflow-wrap: anywhere;
+}
+
+.large-flows__answer {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.large-flows__classify {
+  font-size: 12px;
+}
+
+.large-flows__status {
+  margin: 8px 0 0;
+  color: var(--ink-2);
+  font-size: 12px;
+}

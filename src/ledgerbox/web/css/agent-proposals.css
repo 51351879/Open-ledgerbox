@@ -1,0 +1,115 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* Proposal review is intentionally its own dense region.  The surrounding
+   panel comes from app.css; this sheet owns only the run switcher, one proposed
+   category group and the current transaction facts a person approves.  No
+   class here implies that a model was correct: pending, accepted, edited,
+   rejected and withdrawn are audit outcomes, not quality scores. */
+
+.proposal-controls {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px;
+  margin-bottom: 14px;
+}
+.proposal-controls__run { flex: 1 1 26rem; }
+.proposal-controls__run .control__field { width: 100%; }
+
+.proposal-body[aria-busy="true"] { opacity: 0.7; }
+
+.proposal-run {
+  margin-bottom: 16px; padding: 12px 14px;
+  background: var(--wash-neutral); border-radius: var(--radius);
+}
+.proposal-run__head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px;
+}
+.proposal-run__stamp, .proposal-run__producer {
+  color: var(--ink-2); font-size: 12px;
+}
+.proposal-run__producer { margin-top: 5px; }
+.proposal-run__id {
+  display: block; margin-top: 5px; color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+.proposal-groups { display: flex; flex-direction: column; gap: 12px; }
+.proposal-group {
+  padding: 14px 16px;
+  background: var(--paper); border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent); border-radius: var(--radius);
+}
+.proposal-group__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 10px;
+}
+.proposal-group__title { font-family: var(--mono); font-size: 15px; }
+.proposal-group__controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+}
+.proposal-group__all { font-size: 13px; cursor: pointer; }
+.proposal-group__check, .proposal-row__pick {
+  width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;
+}
+.proposal-group__category { min-width: 13rem; }
+.proposal-group__impact {
+  margin: 10px 0; color: var(--ink-2); font-size: 12.5px;
+}
+.proposal-group__rows {
+  position: relative;
+  border-top: 1px solid var(--rule);
+}
+.proposal-row {
+  display: grid; grid-template-columns: 1.25rem minmax(0, 1fr); gap: 10px;
+  padding: 10px 0; cursor: pointer;
+  border-bottom: 1px dotted var(--rule);
+}
+.proposal-row:hover { background: var(--wash-neutral); }
+.proposal-row__pick { margin-top: 2px; }
+.proposal-row__facts { min-width: 0; }
+.proposal-row__line {
+  display: grid; grid-template-columns: 6.7rem minmax(10rem, 1fr) 7rem;
+  gap: 10px; align-items: baseline;
+}
+.proposal-row__date { font-family: var(--mono); font-size: 12px; }
+.proposal-row__desc { overflow-wrap: anywhere; }
+.proposal-row__amount {
+  text-align: right; white-space: nowrap;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+}
+.proposal-row__amount--out { color: var(--fail); }
+.proposal-row__current {
+  display: block; margin-top: 2px; color: var(--ink-3); font-size: 11.5px;
+}
+
+.proposal-withdraw__start { margin-top: 16px; }
+.proposal-withdraw { margin-bottom: 16px; }
+
+.proposal-history { margin-top: 16px; }
+.proposal-history__summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.proposal-history__rows { margin-top: 10px; }
+.proposal-history__row {
+  display: grid; grid-template-columns: 5.5rem minmax(10rem, 1fr) 7rem 10rem;
+  gap: 10px; align-items: baseline; padding: 8px 0;
+  border-bottom: 1px dotted var(--rule); font-size: 12.5px;
+}
+.proposal-history__desc { overflow-wrap: anywhere; }
+.proposal-history__amount {
+  text-align: right; white-space: nowrap;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+}
+.proposal-history__category { color: var(--ink-2); overflow-wrap: anywhere; }
+
+@media (max-width: 700px) {
+  .proposal-controls__run { flex-basis: 100%; }
+  .proposal-group__controls { align-items: stretch; }
+  .proposal-group__category { width: 100%; }
+  .proposal-row__line { grid-template-columns: 1fr auto; }
+  .proposal-row__desc { grid-column: 1 / -1; grid-row: 2; }
+  .proposal-history__row { grid-template-columns: auto 1fr auto; }
+  .proposal-history__desc { grid-column: 1 / -1; grid-row: 2; }
+  .proposal-history__category { grid-column: 1 / -1; }
+}
+
+@media (max-width: 420px) {
+  .proposal-group { padding: 12px; }
+  .proposal-group__controls .btn { width: 100%; }
+}

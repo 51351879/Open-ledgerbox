@@ -1,0 +1,209 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* The one shape that repeats: a bordered row standing for one archived thing.
+   An upload result, a statement, a queued check, a notice, a deletion plan, a
+   diagnostics row — six lists, one object, keyed by a coloured left edge.
+
+   Its own file rather than more of `app.css` because the seam is real and not
+   alphabetical: `app.css` is the page's furniture, laid out once, and this is a
+   record rendered n times by five different modules. When the same border and
+   the same badge live in the file that also positions the header bar, a change
+   to one list is a change nobody can scope.
+
+   No colour carries a message on its own anywhere below. A refused statement is
+   red *and* says "refused" in words; a statement that booked nothing has a red
+   edge *and* a sentence; a badge is a colour with its label inside it. The
+   colour is a second encoding, always. */
+
+/* --- upload results ------------------------------------------------------- */
+
+.results { display: flex; flex-direction: column; gap: 8px; }
+.results:not(:empty) { margin-top: 16px; }
+
+/* `.card` from app.css supplies the box; the left edge is what says which of
+   the four outcomes this is. `--neutral` is the default so a status the server
+   invents tomorrow still gets an edge rather than none. */
+.card {
+  border-left: 3px solid var(--neutral);
+  font-size: 14px;
+}
+.card--ok { border-left-color: var(--ok); }
+.card--warn { border-left-color: var(--warn); }
+.card--fail { border-left-color: var(--fail); }
+.card--neutral { border-left-color: var(--neutral); }
+.card--pending { border-left-color: var(--rule-strong); opacity: 0.75; }
+
+.card__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 6px;
+}
+.card__name { font-family: var(--mono); font-size: 13px; word-break: break-all; }
+.card__summary { font-size: 14px; }
+.card__note { margin-top: 5px; font-size: 13px; color: var(--ink-2); }
+.card__error { margin-top: 6px; color: var(--fail); font-size: 13px; }
+.card__review { margin-top: 12px; border-top: 1px solid var(--rule); padding-top: 10px; }
+
+.facts {
+  display: flex; flex-wrap: wrap; gap: 2px 20px;
+  margin: 8px 0 0; font-size: 13px;
+}
+.facts__key { color: var(--ink-3); }
+.facts__value { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* --- badges: the operator's own chip, which is a pill ---------------------- */
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid transparent; border-radius: var(--radius-pill);
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+}
+.badge--ok { color: var(--ok); background: var(--wash-ok); border-color: var(--ok); }
+.badge--warn { color: var(--warn); background: var(--wash-warn); border-color: var(--warn); }
+.badge--block, .badge--fail { color: var(--fail); background: var(--wash-fail); border-color: var(--fail); }
+.badge--neutral, .badge--pending {
+  color: var(--ink-2); background: var(--sheet-2); border-color: var(--rule-strong);
+}
+.badge--quiet { color: var(--ink-3); background: transparent; border-color: var(--rule); }
+
+/* --- statements and queue items: the same row, two lists ------------------ */
+
+.statements, .queue { display: flex; flex-direction: column; gap: 8px; }
+
+/* The statement panel's own control bar: one search box, reusing `.control`
+   from transactions.css rather than restating it. A search field on this panel
+   is the same object as the search field on that one and has to look like it;
+   what differs is the bar around it. No rule under this one — the transactions
+   bar separates a dense grid of controls from a table, and this separates one
+   input from a list that starts directly below it, inside a panel a person has
+   already had to open. A second horizontal line there is furniture.
+
+   Capped rather than full-bleed. `.control--wide` is `flex: 1 1 16rem`, and as
+   the only item in the row it would take the whole 1280px column for a box that
+   holds a month; the cap keeps the field the size of what goes in it. The 600px
+   rule in transactions.css gives the basis back at 100%, and `max-width` in
+   `rem` is under that by then, so nothing here has to repeat it. */
+.statements__controls {
+  display: flex; flex-wrap: wrap; align-items: flex-end;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+}
+.statements__controls .control--wide { max-width: 30rem; }
+
+.stmt, .item {
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  border-left: 3px solid var(--ok);
+}
+/* Zero transactions is not a fainter version of a booked statement, it is a
+   different fact — the bytes are archived and the money is not in the ledger —
+   so the edge goes red and the row also says it in words. */
+.stmt--unbooked { border-left-color: var(--alert); }
+.item { border-left-color: var(--warn); }
+.item--warn { border-left-color: var(--warn); }
+.item--block { border-left-color: var(--alert); }
+
+.stmt__head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.stmt__month { font-family: var(--mono); font-size: 14px; font-weight: 600; }
+.stmt__period { color: var(--ink-2); font-size: 13px; }
+.stmt__facts { margin-top: 5px; color: var(--ink-2); font-size: 13px; overflow-wrap: anywhere; }
+.stmt__unbooked { margin-top: 6px; font-size: 13px; max-width: 44rem; }
+.stmt__foot { margin-top: 12px; }
+.stmt__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.group + .group { margin-top: 20px; }
+.group__title { margin-bottom: 8px; color: var(--ink-2); font-size: 13px; font-weight: 500; }
+
+.item__head {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 5px;
+}
+.item__check { font-family: var(--mono); font-size: 13px; }
+.item__month { font-size: 13px; color: var(--ink-2); }
+.item__message { font-size: 14px; }
+.item__foot {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-top: 12px;
+}
+.item__stamp { color: var(--ink-3); font-size: 12px; }
+.item__actions { display: flex; gap: 8px; }
+
+.detail__items {
+  margin: 10px 0 0; padding: 10px 0 0;
+  border-top: 1px dotted var(--rule);
+  list-style: none;
+}
+.detail__items li + li { margin-top: 5px; }
+.detail__key { color: var(--ink-3); font-size: 12px; }
+.detail__value { margin: 0 0 6px; font-size: 13px; overflow-wrap: anywhere; }
+.detail--nested { margin-left: 14px; border-left: 1px solid var(--rule); padding-left: 12px; }
+
+/* --- the deletion plan, inside a confirm notice --------------------------- */
+
+.plan__items { margin: 6px 0 12px; padding-left: 20px; font-size: 13px; }
+.plan__items li { overflow-wrap: anywhere; }
+.plan__items li + li { margin-top: 4px; }
+.plan__check { font-family: var(--mono); }
+.plan__totals { margin-bottom: 10px; font-size: 13px; }
+.plan__checks { margin-top: 10px; }
+/* Hand-made category decisions are the one thing here no rebuild returns, so
+   they get their own edge rather than a bullet among the counts. */
+.plan__loss {
+  margin: 4px 0 12px; padding: 8px 12px; font-size: 13px;
+  background: var(--wash-fail); border-left: 3px solid var(--fail);
+  border-radius: var(--radius);
+}
+.plan__loss strong { color: var(--fail); }
+
+/* --- notices, empties ----------------------------------------------------- */
+
+.notice {
+  margin-top: 12px; padding: 12px 14px;
+  background: var(--wash-neutral);
+  border-left: 3px solid var(--rule-strong); border-radius: var(--radius);
+  font-size: 13px;
+}
+.notice--confirm { background: var(--wash-warn); border-left-color: var(--warn); }
+.notice--fail { background: var(--wash-fail); border-left-color: var(--fail); }
+/* The server's account of a bulk decision lands here too. It is not a failure
+   and must not be painted as one, but it is about the whole panel rather than
+   about a row, which is what this strip is for. */
+.notice--ok { background: var(--wash-ok); border-left-color: var(--ok); }
+.notice__text { margin-bottom: 10px; }
+.notice__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.empty { padding: 16px 0; color: var(--ink-2); font-size: 14px; max-width: 46rem; }
+.empty--fail { color: var(--fail); }
+
+.count { font-family: var(--mono); }
+.count--block { color: var(--fail); font-weight: 600; }
+.count--warn { color: var(--warn); font-weight: 600; }
+
+/* --- diagnostics rows ----------------------------------------------------- */
+
+.diag__rows {
+  display: grid; gap: 2px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  font-size: 13px;
+}
+.diag__row {
+  display: flex; justify-content: space-between; gap: 12px;
+  border-bottom: 1px dotted var(--rule);
+}
+.diag__key { color: var(--ink-3); }
+.diag__value { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.diag__facts { margin-top: 16px; font-size: 13px; color: var(--ink-2); }
+.diag__facts p { margin-bottom: 3px; }
+.diag__path { overflow-wrap: anywhere; color: var(--ink); }
+
+/* --- narrow --------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  /* Stacked, a statement head reads as three facts about one row instead of
+     wrapping into ragged pairs; the plan's bullets give back their indent so a
+     long path has the full column and the page never scrolls sideways. */
+  .item__foot, .card__head { flex-direction: column; align-items: flex-start; }
+  .stmt__head { flex-direction: column; gap: 2px; }
+  .plan__items { padding-left: 16px; }
+}

@@ -1,0 +1,376 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* The frame: where the boxes go. Header bar, the four figures, the charts row,
+   the panels the rest of the page sits in, the buttons, the drop overlay.
+   `tokens.css` says what the colours mean; this file only spends them.
+
+   The shape is the operator's own earlier dashboard, rebuilt from its source
+   rather than its bundle: a 1200px column, a `--sheet-2` header bar with the
+   title left and the controls right, a `repeat(auto-fit, minmax(240px, 1fr))`
+   summary grid of white cards, then a `2fr 1fr` charts row that collapses to
+   one column under 900px. What did not come across is the delivery: that file
+   pulls Inter off a font service and Chart.js off a CDN, and this page is
+   served under `default-src 'self'` and has to work with the cable unplugged.
+   So it keeps the system stack and the hand-written SVG, and takes the layout
+   and the palette, which is what was actually being asked for.
+
+   A card here is a real box, where the previous design used ruled regions. That
+   is a reversal and it is deliberate: the ruled book said "this is the next
+   column of one document", and the operator's answer was that they could not
+   find the figures. Boxes rank; rules flow. */
+
+/* --- the column ----------------------------------------------------------- */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+
+/* Every card on the page, in one rule, so a panel and a summary figure are the
+   same object at two sizes rather than two things that happen to look alike:
+   white, hairline, rounded, lifting a little under the pointer. `.panel` is a
+   card that owns a section and so carries the gap to the next one; `.chart` is
+   one cell of the charts row; `.card` is the record `records.css` describes,
+   which is the only one of them that also takes a coloured left edge. */
+.card, .panel, .chart, .ledger__cell, .ledger__empty {
+  padding: var(--pad);
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease;
+}
+.card:hover, .panel:hover, .chart:hover, .ledger__cell:hover { box-shadow: var(--shadow-md); }
+.panel { margin-bottom: 32px; }
+
+/* --- masthead ------------------------------------------------------------- */
+
+.masthead {
+  margin-bottom: 24px;
+  padding: 20px 0;
+  background: var(--sheet-2);
+  border-bottom: 1px solid var(--rule);
+}
+/* The containing block for the add-statements panel, which hangs below the bar
+   and has to line up with the column rather than with the viewport. */
+.masthead__bar {
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.wordmark { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+.tagline { margin-top: 4px; max-width: 34rem; color: var(--ink-2); font-size: 13px; }
+.masthead__controls { display: flex; align-items: center; gap: 12px; }
+
+/* --- add statements: a small button that opens the real drop zone ---------- */
+
+/* A `<details>`, so the toggle is a control the browser already knows how to
+   focus, name and announce. The drop zone inside it is the same element it has
+   always been — page-wide drag and drop is wired in `upload.js` on `document`
+   and does not care whether this panel is open, so a file dropped anywhere
+   still uploads. `main.js` opens the panel when files are enqueued, because a
+   result card rendered inside a closed disclosure is a result nobody sees. */
+.adder { position: static; }
+.adder__toggle {
+  display: inline-block;
+  padding: 8px 16px;
+  color: var(--on-solid); background: var(--accent-ink);
+  border: 1px solid var(--accent-ink); border-radius: var(--radius);
+  font-size: 14px; font-weight: 500; white-space: nowrap;
+  cursor: pointer; list-style: none;
+}
+.adder__toggle::-webkit-details-marker { display: none; }
+.adder__toggle:hover { filter: brightness(1.08); }
+.adder[open] .adder__toggle { background: var(--ink); border-color: var(--ink); }
+
+.adder__panel {
+  position: absolute; z-index: 8;
+  top: 100%; left: var(--pad); right: var(--pad);
+  max-width: 34rem; margin-left: auto;
+  max-height: min(70vh, 42rem); overflow-y: auto;
+  padding: 16px;
+  background: var(--sheet);
+  border: 1px solid var(--rule); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.adder__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px;
+}
+.adder__title { font-size: 15px; }
+
+.dropzone {
+  padding: 24px 16px;
+  background: var(--paper);
+  border: 1px dashed var(--field); border-radius: var(--radius);
+  text-align: center;
+}
+/* No hover state on the zone itself: `upload.js` signals a drag with the
+   full-page overlay, and a second signal here would be one the code does not
+   actually send. */
+.dropzone__lead { font-size: 15px; font-weight: 600; }
+.dropzone__sub {
+  margin: 6px auto 14px; max-width: 26rem;
+  color: var(--ink-2); font-size: 13px;
+}
+
+/* The status strip and the connection light are in status.css: both are the
+   page reporting on its own state, and this file was two lines under the
+   400-line signal when the light arrived. */
+
+/* --- the four figures, which are the headline ----------------------------- */
+
+.ledger { margin-bottom: 24px; }
+.ledger__grid {
+  display: grid; gap: var(--pad);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.ledger__cell { display: flex; flex-direction: column; }
+.ledger__key { margin-bottom: 8px; color: var(--ink-2); font-size: 14px; font-weight: 500; }
+.ledger__value {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+}
+.ledger__value--out { color: var(--fail); }
+.ledger__value--in { color: var(--ok); }
+.ledger__foot { margin-top: 12px; color: var(--ink-2); font-size: 13px; }
+.ledger__empty { color: var(--ink-2); }
+.ledger__empty strong { color: var(--ink); font-weight: 600; }
+
+/* --- section heads -------------------------------------------------------- */
+
+.panel__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.panel__title { font-size: 18px; }
+/* Flex with a gap because the two counts are appended as bare adjacent spans:
+   without it the review queue read "1 blocking0 warning" on every load with
+   anything in it. Fixed here rather than by putting a space inside one of the
+   strings -- a separator that lives in a label is a separator that goes missing
+   the moment the label is reworded or translated. */
+.panel__meta {
+  display: flex; flex-wrap: wrap; gap: 2px 16px;
+  color: var(--ink-2); font-size: 13px;
+}
+.panel__note { max-width: 60rem; margin-bottom: 16px; color: var(--ink-2); font-size: 13px; }
+
+/* --- the charts row ------------------------------------------------------- */
+
+/* 2fr 1fr, one column under 900px: the operator's own proportions, and the
+   reason the wide chart is the months and the narrow one is the breakdown. */
+.charts { margin-bottom: 32px; }
+/* `align-items: start`, so a card is as tall as what is in it. The breakdown's
+   legend carries a row per slice and is much taller than a fixed-height plot;
+   stretched, the months card grew a third of a screen of empty white below its
+   own axis, which reads as something failing to load. */
+.charts__grid {
+  display: grid; gap: var(--pad); align-items: start;
+  grid-template-columns: 2fr 1fr;
+}
+/* A grid item's `min-width` is `auto`, which means "no narrower than my
+   content". The month chart is a fixed-pixel SVG that scrolls inside its own
+   wrapper, and `auto` made the whole column refuse to go below the SVG's 680px
+   — measured at a 380px viewport as 350px of horizontal scroll on the *page*,
+   with every other panel dragged along with it. The wrapper's `overflow-x` was
+   never reached because the track never got small enough to trigger it. */
+.charts__grid > * { min-width: 0; }
+
+@media (max-width: 900px) {
+  .charts__grid { grid-template-columns: 1fr; }
+}
+
+/* --- buttons -------------------------------------------------------------- */
+
+.btn {
+  font: inherit; font-size: 14px; font-weight: 500;
+  padding: 8px 16px;
+  color: var(--on-solid); background: var(--accent-ink);
+  border: 1px solid var(--accent-ink); border-radius: var(--radius);
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(1px); }
+.btn--quiet {
+  color: var(--accent-ink); background: transparent; border-color: var(--accent);
+  filter: none;
+}
+.btn--quiet:hover { background: var(--sheet-2); filter: none; }
+.btn--danger { color: var(--on-solid); background: var(--alert); border-color: var(--alert); }
+.btn[disabled] { opacity: 0.5; cursor: default; transform: none; }
+
+/* --- drop overlay --------------------------------------------------------- */
+
+.drop-overlay {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  border: 3px solid var(--accent);
+}
+.drop-overlay[hidden] { display: none; }
+.drop-overlay__text { font-size: 24px; font-weight: 600; color: var(--ink); }
+
+/* --- diagnostics: present, ranked below, never hidden --------------------- */
+
+.diag {
+  margin-bottom: 24px; padding: 12px var(--pad);
+  background: var(--sheet);
+  border: 1px solid var(--rule); border-radius: var(--radius-lg);
+}
+.diag > summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.diag > summary:hover { color: var(--ink); }
+.diag__body { margin-top: 14px; }
+
+/* --- colophon ------------------------------------------------------------- */
+
+.colophon { color: var(--ink-3); font-size: 12px; max-width: 42rem; }
+.noscript {
+  padding: 16px;
+  background: var(--wash-warn);
+  border-left: 3px solid var(--warn); border-radius: var(--radius);
+}
+
+/* --- narrow ---------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  :root { --pad: 16px; }
+  .masthead__bar { flex-direction: column; align-items: flex-start; }
+  .masthead__controls { width: 100%; }
+  .ledger__value { font-size: 24px; }
+  /* Anchored to both edges of the column rather than hung off the button: below
+     600px the controls wrap to their own row on the left, and a right-anchored
+     panel wider than the button would run off the left of the screen. */
+  .adder__panel { max-width: none; }
+}
+
+/* --- a folded panel ------------------------------------------------------
+   Statements ships shut: it is provenance, consulted when a figure looks wrong
+   or a file has to come back out, rather than an answer. The summary keeps the
+   counts, so a statement that booked nothing is still announced without
+   anybody opening anything. */
+
+.panel__fold > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.1rem 0;
+}
+
+.panel__fold > summary::-webkit-details-marker { display: none; }
+
+.panel__fold > summary::before {
+  content: "\25B8";
+  color: var(--ink-3);
+  font-size: 0.9em;
+  transition: transform 0.12s ease;
+}
+
+.panel__fold[open] > summary::before { transform: rotate(90deg); }
+
+.panel__fold > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+
+.statements__controls { margin: 0.75rem 0 0.5rem; }
+
+/* --- planning notes ------------------------------------------------------
+   The only region on this page that is not a reading of the ledger. Styled
+   quietly on purpose: it must not compete with figures that can be proved, and
+   the four cards at the top are the ones that can. */
+
+.advice__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.advice__choice[aria-pressed="true"] {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  color: var(--sheet);
+}
+
+.advice__body {
+  border-left: 3px solid var(--rule-strong);
+  padding: 0.25rem 0 0.25rem 1rem;
+}
+
+.advice__heading {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.advice__list {
+  margin: 0 0 0.75rem 1.1rem;
+  color: var(--ink-2);
+}
+
+.advice__note { margin-bottom: 0.4rem; }
+
+.advice__measured { margin-bottom: 0.5rem; }
+
+.advice__blind { font-size: 0.85rem; }
+
+/* `hidden` is display:none in the UA sheet, and any author `display` beats it.
+   The range's custom fields set `display: flex`, so they rendered permanently —
+   the From/To inputs showed with "All time" selected and pushed the masthead
+   control row past the viewport at 380px.
+
+   `!important` is what wins it, and saying so matters because the earlier note
+   here claimed specificity did. It does not: `[hidden]` and `.range__custom`
+   are both (0,1,0), and `.range__custom` is further down this same file, so on
+   specificity and order alone the `display: flex` wins -- which is exactly the
+   bug. The declaration is deliberately the blunt kind: `hidden` is the one
+   attribute in this page whose meaning no component's layout may negotiate. */
+[hidden] { display: none !important; }
+
+/* --- the date range control ---------------------------------------------
+   Masthead furniture, so it lives with the rest of the header rather than in
+   the chart sheet where it first landed. It sits on the control row beside the
+   preset, and only for "Custom": the row grows sideways when it appears, so
+   nothing below it moves.
+
+   The fields are white rather than the header's own wash. On `--sheet-2` they
+   read as part of the bar and a person hunting for "where do I type a date"
+   has to find them; a white field is the shape every form on every page uses
+   for somewhere you type. */
+
+.range { display: inline-flex; align-items: center; }
+
+.range__custom {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
+.range__field { display: flex; flex-direction: column; gap: 0.15rem; }
+
+.range__key {
+  font-size: 0.72rem;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+
+.range__field input {
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  padding: 0.34rem 0.45rem;
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+}
+
+.range__field input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

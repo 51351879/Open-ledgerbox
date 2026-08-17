@@ -1,0 +1,16 @@
+# Line endings are normalized in the repository. src/ledgerbox/db/schema.sql is
+# a generated snapshot compared byte-for-byte against a live database in the
+# test suite; a CRLF checkout would make that comparison fail in a way no
+# amount of regenerating could fix.
+* text=auto eol=lf
+
+*.sql   text eol=lf
+*.py    text eol=lf
+*.md    text eol=lf
+*.toml  text eol=lf
+*.json  text eol=lf
+
+# Never touch binaries.
+*.pdf   binary
+*.png   binary
+*.ico   binary

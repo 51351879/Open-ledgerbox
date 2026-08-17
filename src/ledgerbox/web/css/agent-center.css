@@ -1,0 +1,295 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* A7.3 Agent evidence and the page directory occupy the wide desktop margin.
+   This is navigation, not a conversation surface: it stays quiet, fixed while
+   the ledger scrolls, and becomes an ordinary top panel when the margin is too
+   narrow to hold it without covering the main column. */
+
+html { scroll-behavior: smooth; }
+
+#ledger,
+#analytics,
+#transactions,
+#agent-proposals,
+#agent-triage,
+#statement-history,
+#advice,
+#review-queue { scroll-margin-top: 20px; }
+
+.workspace-sidebar {
+  position: fixed;
+  z-index: 6;
+  top: 108px;
+  bottom: 24px;
+  left: max(16px, calc(50% - 940px));
+  width: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.sidebar__panel {
+  padding: 16px;
+  background: color-mix(in srgb, var(--sheet) 92%, var(--paper));
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+}
+
+.sidebar__eyebrow {
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar__loading { margin-top: 6px; color: var(--ink-2); font-size: 13px; }
+
+.sidebar__ledger-name {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.sidebar__ledger-path {
+  display: block;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  color: var(--ink-3);
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+.agent-status {
+  position: relative;
+  margin-top: 14px;
+  padding-left: 16px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.agent-status::before {
+  content: "";
+  position: absolute;
+  top: 0.42em;
+  left: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--neutral);
+}
+
+.agent-status--up { color: var(--ok); }
+.agent-status--up::before { background: var(--ok); }
+.agent-status--down { color: var(--fail); }
+.agent-status--down::before { background: var(--fail); }
+
+.sidebar__evidence {
+  margin: 3px 0 14px 16px;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.agent-job {
+  margin: 0 0 12px;
+  padding: 9px 10px;
+  background: var(--sheet-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.agent-job__label {
+  color: var(--ink-3);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.agent-job__summary {
+  margin-top: 3px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+/* The bar is how far through the candidate pool this stretch of work has got.
+   It is never the only statement of progress: the line under it carries the
+   counts, and says which part of the remaining time is an estimate. */
+.agent-job__meter {
+  margin-top: 6px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule);
+  overflow: hidden;
+}
+
+.agent-job__meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 240ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-job__meter-fill {
+    transition: none;
+  }
+}
+
+.agent-job__progress {
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.agent-job__needs {
+  display: inline-block;
+  margin-top: 5px;
+  color: var(--alert);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 2px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.sidebar-nav__link,
+.sidebar-nav > a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 8px;
+  color: var(--ink-2);
+  border-radius: var(--radius);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.sidebar-nav__link:hover,
+.sidebar-nav__link:focus-visible,
+.sidebar-nav > a:hover,
+.sidebar-nav > a:focus-visible {
+  color: var(--ink);
+  background: var(--sheet-2);
+}
+
+.sidebar-nav__badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  color: var(--on-solid);
+  background: var(--alert);
+  border-radius: var(--radius-pill);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.agent-setup { margin-top: 10px; }
+
+.agent-setup__summary,
+.agent-settings__summary {
+  cursor: pointer;
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.agent-setup__body,
+.agent-settings__body {
+  display: grid;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.agent-setup__control { display: grid; gap: 4px; }
+
+.agent-setup__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn--compact { padding: 6px 9px; font-size: 11.5px; }
+
+.agent-setup__tutorial,
+.agent-setup__guide,
+.agent-setup__aside,
+.agent-setup__disclosure,
+.agent-setup__status {
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.agent-setup__guide code { overflow-wrap: anywhere; color: var(--ink-2); }
+
+.agent-settings {
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.agent-setup__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.agent-setup__check input { margin-top: 2px; accent-color: var(--accent); }
+.agent-setup__status { min-height: 1.2em; color: var(--ink-2); }
+
+@media (max-width: 1720px) {
+  .workspace-sidebar {
+    position: static;
+    width: auto;
+    max-width: 1200px;
+    margin: 0 auto 20px;
+    padding: 0 var(--pad);
+    overflow: visible;
+  }
+
+  .sidebar__panel {
+    display: grid;
+    grid-template-columns: minmax(170px, 0.7fr) minmax(420px, 2fr) minmax(220px, 0.9fr);
+    column-gap: 16px;
+    align-items: start;
+  }
+
+  .sidebar__panel > .sidebar__eyebrow,
+  .sidebar__panel > .sidebar__ledger-name,
+  .sidebar__panel > .sidebar__ledger-path,
+  .sidebar__panel > .agent-status,
+  .sidebar__panel > .sidebar__evidence,
+  .sidebar__panel > .agent-job { grid-column: 1; }
+
+  .sidebar-nav { grid-column: 2; grid-row: 1 / span 7; grid-template-columns: repeat(2, 1fr); }
+  .agent-setup { grid-column: 3; grid-row: 1 / span 7; margin-top: 0; }
+}
+
+@media (max-width: 900px) {
+  .sidebar__panel { display: block; }
+  .sidebar-nav { margin-top: 12px; grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 520px) {
+  .sidebar-nav { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

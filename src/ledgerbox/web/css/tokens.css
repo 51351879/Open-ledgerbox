@@ -1,0 +1,234 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* The vocabulary: every custom property, the reset, the base type, and the two
+   utilities that are not about any one region. Nothing in this file draws a
+   thing you can point at on the page. Everything else speaks it.
+
+   This is the seam the 400-line rule forced. app.css had reached 398 lines and
+   the restyle roughly doubles it, so it had to break somewhere; it broke here
+   because "what the words mean" and "where the boxes go" are the two halves
+   that were already implicitly separate — the token block was the top fifth of
+   the old file and no rule below it did anything but read from it. The other
+   two cuts follow the same test: `records.css` holds the one shape that repeats
+   (a bordered row standing for one archived thing), `transactions.css` and
+   `charts.css` hold the two dense regions that were already their own files.
+
+   ── The palette ─────────────────────────────────────────────────────────────
+
+   Taken from the operator's own earlier dashboard: a warm paper ground, white
+   cards, a brass accent, green for money in and a muted red for money out. The
+   names below are the ones this codebase already used, so `transactions.css`
+   and `charts.css` kept working when the values under them changed.
+
+     --paper   #FFFBF5   page ground        (their --bg-primary)
+     --sheet   #FFFFFF   cards              (their --bg-card)
+     --sheet-2 #F5EBD9   header bar, table headers, chips (their --bg-secondary)
+     --ink     #3D3226   primary text       (their --text-primary)
+     --ink-2   #6B5B4F   secondary text     (their --text-secondary)
+     --rule    #E6DCC8   borders            (their --border-color)
+     --accent  #B8860B   brass              (their --accent-gold)
+     --ok      #4A7C59   money in           (their --income-green)
+     --fail    #A85751   money out          (their --expense-red)
+     --alert   #C44536   loudest edge       (their --highlight-red)
+
+   Three tokens are ours because theirs had no equivalent that clears AA:
+
+   * `--ink-3`, a third text tone for stamps and counts. They had two.
+   * `--accent-ink`, a deeper brass. White text on #B8860B measures 3.25:1 —
+     the old dashboard's own primary button, and under the 4.5:1 this project
+     holds itself to. #B8860B stays as the *brass you see*: focus ring, hover
+     edge, swatch. #8F6708 is the brass you *read*: button fill under white
+     text at 5.11:1, and accent-coloured words at 4.95:1 on paper.
+   * `--field`, the edge of a control. WCAG 1.4.11 asks 3:1 of a control's
+     boundary and `--rule` is 1.32:1 — right for a hairline inside a card,
+     wrong for the thing that says where an input begins.
+
+   Every measured pair is in `docs`-free reach: they are listed above each block
+   and none of the introduced ones is below 4.5:1 for text or 3:1 for a boundary
+   that carries a fact. The chart wedges are the documented exception and the
+   argument for them is in `charts.css`.
+
+   ── Dark ────────────────────────────────────────────────────────────────────
+
+   The old dashboard has no dark mode, so this one is derived rather than
+   copied: the same warm hue family rotated to a dark ground, with the accent,
+   green and red lifted until each clears AA against all three surfaces. Light
+   text on a dark card and dark text on a light card are the two directions, and
+   `--on-solid` is the one token that flips so a filled button never has to
+   guess. */
+
+:root {
+  color-scheme: light dark;
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --paper: #fffbf5;
+  --sheet: #ffffff;
+  --sheet-2: #f5ebd9;
+  --ink: #3d3226;
+  --ink-2: #6b5b4f;
+  --ink-3: #786757;
+  --rule: #e6dcc8;
+  --rule-strong: #c9b896;
+  --field: #967c4a;
+
+  --accent: #b8860b;
+  --accent-ink: #8f6708;
+  --ok: #4a7c59;
+  --warn: #845706;
+  --fail: #a85751;
+  --alert: #c44536;
+  --neutral: #6b5b4f;
+  --on-solid: #ffffff;
+
+  /* The operator's dashboard tints its chips at 12% of the money colour over
+     white, which puts `--ok` on `--wash-ok` at 4.17:1 and `--fail` on
+     `--wash-fail` at 4.33:1. A badge is 11px, so 4.5:1 is the bar and both miss
+     it. Diluting the tint rather than darkening the text keeps the money
+     colours at exactly their values: 4.54 and 4.65 measured. */
+  --wash-ok: #f4f8f5;
+  --wash-warn: #f7f1e2;
+  --wash-fail: #faf4f3;
+  --wash-neutral: #f5ebd9;
+
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgba(61, 50, 38, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(61, 50, 38, 0.1);
+  --pad: 20px;
+
+  /* The twenty-four categorical steps. Their reasoning, and the measured ratio of
+     every one of them, is in `charts.css` beside the rules that paint them. */
+  --cat-1: #a85751;
+  --cat-2: #d4a574;
+  --cat-3: #b8860b;
+  --cat-4: #4a7c59;
+  --cat-5: #6b5b4f;
+  --cat-6: #4682b4;
+  --cat-7: #5f9ea0;
+  --cat-8: #daa520;
+  --cat-9: #6e8c3a;
+  --cat-10: #2f7f6e;
+  --cat-11: #3b5ba5;
+  --cat-12: #7b5ea7;
+  --cat-13: #93478f;
+  --cat-14: #a9527e;
+  --cat-15: #6e3e3a;
+  --cat-16: #2c5a80;
+  --cat-17: #2e5740;
+  --cat-18: #533a78;
+  --cat-19: #7c5420;
+  --cat-20: #1f6675;
+  --cat-21: #4f557d;
+  --cat-22: #355c5b;
+  --cat-23: #6b4567;
+  --cat-24: #5a5233;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #17130e;
+    --sheet: #211c15;
+    --sheet-2: #2c251b;
+    --ink: #f4ecde;
+    --ink-2: #c5b39c;
+    --ink-3: #ac9a83;
+    --rule: #3a3126;
+    --rule-strong: #564a38;
+    --field: #85734f;
+
+    --accent: #dda939;
+    --accent-ink: #e8b84e;
+    --ok: #6fbe8a;
+    --warn: #dfaa55;
+    --fail: #e7908a;
+    --alert: #ef8571;
+    --neutral: #c5b39c;
+    --on-solid: #17130e;
+
+    --wash-ok: #1b2a20;
+    --wash-warn: #2c2113;
+    --wash-fail: #2e1d1a;
+    --wash-neutral: #262017;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+
+    /* Every step lifted until it clears 3:1 on a dark card; the light steps of
+       a hue pair become the dark theme's *lighter* ones so the pairing survives
+       the flip instead of collapsing. */
+    --cat-1: #d98077;
+    --cat-2: #e0b98d;
+    --cat-3: #c6921f;
+    --cat-4: #74b98a;
+    --cat-5: #b09b87;
+    --cat-6: #74a9d8;
+    --cat-7: #79c0c2;
+    --cat-8: #ebc969;
+    --cat-9: #9dbe5c;
+    --cat-10: #61b7a2;
+    --cat-11: #7c93d8;
+    --cat-12: #ae93d8;
+    --cat-13: #d083cc;
+    --cat-14: #d889af;
+    --cat-15: #f0a8a0;
+    --cat-16: #b8d2e8;
+    --cat-17: #b3dcc0;
+    --cat-18: #ddc0ea;
+    --cat-19: #d9a968;
+    --cat-20: #70bdca;
+    --cat-21: #a9b0e2;
+    --cat-22: #91c8c6;
+    --cat-23: #d3a2cf;
+    --cat-24: #c5b77b;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 0 40px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.5 var(--font);
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; }
+p { margin: 0; }
+code { font-family: var(--mono); font-size: 0.92em; }
+
+/* Money is mono and tabular wherever it appears, so figures line up down the
+   page the way they line up down a page. */
+.num, .money { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-3); }
+
+/* Absolutely positioned, so it takes no space and reads in DOM order. The catch
+   is that "absolutely positioned" means its containing block is the nearest
+   *positioned* ancestor, and if there is none that is the initial containing
+   block — the page. A one-pixel box then sits at its static position, which
+   inside a table wider than the screen is off the right of the screen, and it
+   is not clipped by the scroller the table sits in, because that scroller is
+   not its containing block.
+   Measured: at a 380px viewport the sentence "No category: nothing claimed" in
+   the transactions table put `document.documentElement.scrollWidth` at 428 and
+   the whole page scrolled 48px sideways over blank space. That is why every
+   horizontal scroller on this page sets `position: relative` — see
+   `.txn-scroll` and `.chart-scroll`. It is fixed there rather than here so the
+   fix is stated where the containing block is, and so a new scroller has to
+   opt in rather than silently inherit a rule it does not know about. */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip-path: inset(50%); overflow: hidden;
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Motion here is feedback on a real action and nothing else, so there is very
+   little of it to switch off; what exists still goes. */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  .btn:active { transform: none; }
+}

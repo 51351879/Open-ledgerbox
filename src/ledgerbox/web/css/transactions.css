@@ -1,0 +1,281 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* The transactions panel: a control bar, an aligned table, a pager.
+
+   Split out of app.css when that file reached the 400-line signal
+   `docs/EXECUTION_PLAN.md` §1.3 puts there — the same treatment §5.66 gave
+   `statements.js`, and for the same reason: compressing comments to stay under
+   the line would be muting the signal, not answering it.
+
+   The seam is real rather than alphabetical. `tokens.css` holds the page's
+   vocabulary and `app.css` its furniture, and every one of those tokens is used
+   here. This file holds the one region that is not a record row but a dense
+   grid of figures, which is a different typographic problem: columns that have
+   to line up down the page, a control bar that must wrap without reflowing the
+   table, and a picker on every line.
+
+   The table's chrome follows the operator's own dashboard: a rounded, bordered
+   wrapper that scrolls inside itself, `--sheet-2` behind the header row, hover
+   on the body rows. The month `<select>` in the control bar stays in the
+   control bar, because it is a statement-month filter on this table and not the
+   page-wide date range; `index.html` says beside it what wiring that range
+   would take.
+
+   No colour carries a message on its own. A credit is green and a debit red,
+   *and* `formatMinor` has already rendered the debit as `-$12.44`; a category
+   chip is tinted with that category's step of the charts' palette *and* prints
+   the id inside itself; a transfer is a badge with the word in it; a category
+   somebody set says "set by you" in text beside the id. Every one of those is a
+   second encoding, and the line an unclaimed line shows — an em dash — is
+   deliberately given no tint at all, because it is not a category. */
+
+/* --- the control bar ------------------------------------------------------ */
+
+.controls {
+  display: flex; flex-wrap: wrap; align-items: flex-end;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.control { display: flex; flex-direction: column; gap: 4px; }
+.control--wide { flex: 1 1 16rem; }
+.control__key { color: var(--ink-2); font-size: 13px; }
+.control__field {
+  font: inherit; font-size: 14px;
+  padding: 8px 12px;
+  color: var(--ink); background: var(--sheet);
+  border: 1px solid var(--field); border-radius: var(--radius);
+}
+.control__field:hover { border-color: var(--accent); }
+.control__field:focus { border-color: var(--accent); }
+.control__reset { align-self: flex-end; }
+
+/* --- the table's own figures ---------------------------------------------- */
+
+/* Labelled "bank leg" in every one of them, and never "In" or "Out" on their
+   own. The four figures at the top of the page are measured on the income and
+   expense legs with transfers and the opening entry taken out; these are this
+   account's own leg with everything in. Two cashflow figures that merely looked
+   alike cost this project a block-level check to settle (§5.45), so the third
+   one arrives already saying which it is. */
+.txn-totals { margin-bottom: 16px; }
+.txn-figures {
+  display: grid; gap: 8px 40px;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+.txn-figure { display: flex; flex-direction: column; gap: 2px; }
+.txn-figure__key { color: var(--ink-2); font-size: 13px; }
+.txn-figure__value { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.txn-legend { margin-top: 8px; font-size: 13px; max-width: 60rem; }
+.txn-summary { margin-top: 6px; font-size: 13px; color: var(--ink-2); max-width: 60rem; }
+
+/* --- the table ------------------------------------------------------------ */
+
+/* Scrolls inside itself. A bank descriptor is long and third-party, and a page
+   that scrolls sideways because of one line is a page one line can break. */
+/* `position: relative` is load-bearing and not decoration: it makes this box
+   the containing block for the `.visually-hidden` sentences the category and
+   transfer cells carry, so they are clipped and scrolled with the table instead
+   of being laid out against the page. Without it the page itself scrolled 48px
+   sideways at 380px over nothing at all; `tokens.css` records the measurement
+   beside `.visually-hidden`. */
+.txn-scroll {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--rule); border-radius: var(--radius-lg);
+  background: var(--sheet);
+}
+
+.txn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.txn-table th {
+  padding: 12px 10px;
+  background: var(--sheet-2);
+  color: var(--ink); font-weight: 600; font-size: 13px;
+  text-align: left; white-space: nowrap;
+  border-bottom: 2px solid var(--rule);
+}
+.txn-table td {
+  padding: 10px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--rule);
+}
+.txn:hover td { background: var(--wash-neutral); }
+
+.txn__date { white-space: nowrap; }
+.txn__desc { min-width: 16rem; overflow-wrap: anywhere; }
+.txn__month { display: block; font-family: var(--mono); font-size: 11px; }
+.txn__transfer { white-space: nowrap; }
+.txn__cat { white-space: nowrap; }
+/* The operator's category chip: a pill, which is the same chip their own table
+   uses, and tinted the way theirs were rather than all one grey. It is a label
+   and not a control.
+
+   ── Where the colour comes from ────────────────────────────────────────────
+
+   Nothing below names a hue. The step class on the chip is `charts.css`'s —
+   `.slice-1` … `.slice-24`, each setting `--slice` to one of `tokens.css`'s
+   `--cat-n` — and `transaction-filters.js` picks which one by importing
+   `sliceClass` from `charts.js`. So the palette exists once, the class names
+   exist once, and this file contributes exactly one thing the charts already
+   have their own version of: a rule that spends `--slice`. A second copy of
+   those twenty-four values living here is the shape §5.29 exists to name.
+
+   ── Where it agrees with the donut, and where it does not ──────────────────
+
+   It agrees on the palette. It does **not**, in general, put a given category
+   on the same step as the donut does, and that is a fact about the donut rather
+   than a shortcut taken here. `chart-categories.js` calls `sliceClass(index)`
+   with the slice's position in the breakdown, and `repo` ranks that breakdown
+   `ORDER BY spend_minor, category_id` — largest spend first. Over there a
+   colour is therefore a fact about the current window: narrow the date range,
+   or recategorise one line, and two wedges trade hues. A table is read down the
+   page and returned to, so its chips are keyed to the taxonomy instead
+   (`ORDER BY c.kind, c.id`), which nothing a person does moves.
+
+   Making the two agree means making the donut key off the category rather than
+   off the rank — one call in `chart-categories.js`, in a file this change does
+   not own. Until then the honest statement is the one above: one palette, two
+   assignments, and neither of them is guessed at.
+
+   ── What the tint measures ─────────────────────────────────────────────────
+
+   The chip is `--ink` on a 14% mix of its step into `--sheet`, with the step at
+   full strength as the edge. Text on the tint is 9.86:1 at worst and 11.26:1 at
+   best in light, 10.31:1 and 11.67:1 in dark — the mix is opaque and computed
+   from tokens, so hovering the row does not move it. The edge is the same
+   colour `charts.css` already measured against the same card: 2.23:1 at worst
+   in light, 5.66:1 in dark. Under 3:1, and allowed to be for the reason stated
+   there — the id is printed inside the chip, so the edge is a second encoding
+   of something already in words and not a graphical object required to
+   understand it. */
+.txn__catname {
+  display: inline-block; padding: 3px 10px;
+  background: var(--sheet-2);
+  border: 1px solid transparent; border-radius: var(--radius-pill);
+  font-family: var(--mono); font-size: 11px; color: var(--ink);
+}
+/* Added only alongside a `.slice-n`, never on its own, exactly as `charts.css`
+   pairs `--paint` with a step: the step class carries `--slice` and this is the
+   only rule that spends it, so a chip with no step keeps the plain pill above
+   instead of resolving `--slice` to nothing and losing its background with it.
+   `color-mix` is dropped whole by a renderer that does not have it, which lands
+   on that same plain pill rather than on a transparent one. */
+.txn__catname--tint {
+  background: color-mix(in srgb, var(--slice) 14%, var(--sheet));
+  border-color: var(--slice);
+}
+/* The em dash is a glyph, not a sentence; the sentence is in the
+   `visually-hidden` span beside it and in the panel note above the table. */
+.txn__none { font-family: var(--mono); }
+/* "set by a rule" / "set by you": which source answered, in words, on every
+   row that has an answer. Nothing about it is signalled by colour alone. */
+.txn__by { display: block; margin-top: 2px; color: var(--ink-3); font-size: 11px; }
+.txn__by--mine { color: var(--accent-ink); font-weight: 600; }
+
+/* Money in green, money out red, and the tokens are the ones `.ledger__value--in`
+   and `--out` already paint the four figures at the top of the page with. A
+   green chosen here would be a second vocabulary for one fact.
+
+   Measured, `--ok` then `--fail`, at 13px:
+
+     ground                     light          dark
+     --sheet   (resting row)   4.86 / 5.06   7.58 / 7.05
+     --wash-neutral (hover)    4.11 / 4.28   7.23 / 6.73
+
+   The resting pair clears AA in both themes. Under the pointer the row's own
+   wash lifts the ground and the light pair lands just under 4.5 — `--fail` on
+   that ground is what this table has always shipped, and `--ok` joins it there
+   rather than being darkened away from the figure it is quoting. Diluting the
+   hover far enough to recover 4.5 puts it at 1.07:1 against the card, which is
+   no hover at all; the fix that would actually settle it is a lighter neutral
+   wash or a darker pair of money tokens, and both of those live in
+   `tokens.css`.
+
+   Neither colour is the only thing saying which direction a line went:
+   `formatMinor` has already rendered a debit as `-$12.44`, the sign is in the
+   glyph, and the column is right-aligned so the minus is where it can be seen.
+   A reader who sees no colour at all loses nothing. Exactly zero takes neither
+   colour, because it is neither direction. */
+.txn__amount, .txn-table th.txn__c-amount { text-align: right; white-space: nowrap; }
+.txn__amount { font-weight: 500; }
+.txn__amount--in { color: var(--ok); }
+.txn__amount--out { color: var(--fail); }
+/* --- selecting many, and saying one thing about them ---------------------- */
+
+/* The checkbox column is first and narrow. `.txn__pick` is the control itself
+   in both the header and the rows, so the two cannot drift apart in size. */
+.txn__c-pick { width: 1%; }
+.txn__pick-cell { padding-right: 0; }
+.txn__pick { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+/* Only present while something is selected. It sits between the figures and the
+   rows because it is about the rows; a strip that were always there would be a
+   control bar the table has to carry on every load. */
+.bulk {
+  display: flex; flex-wrap: wrap; align-items: end; gap: 10px 16px;
+  margin: 0 0 12px; padding: 12px 14px;
+  background: var(--wash-neutral); border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+}
+.bulk__lead { font-size: 13px; }
+.bulk__field { display: flex; flex-direction: column; gap: 4px; }
+.bulk__pick { min-width: 12rem; }
+.bulk__actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* The two lines that say something a person has to read before pressing the
+   button beside them, so they take the whole width rather than being pushed
+   onto the end of a row of controls. */
+.bulk__note, .bulk__cap { flex: 1 0 100%; margin: 0; font-size: 12.5px; color: var(--ink-2); }
+.bulk__note { color: var(--warn); }
+.bulk__note[hidden] { display: none; }
+
+.txn__ccy { font-size: 11px; color: var(--ink-2); }
+
+.txn__set { width: 1%; }
+.picker {
+  font: inherit; font-size: 12px;
+  max-width: 11rem;
+  padding: 5px 8px;
+  color: var(--ink); background: var(--sheet);
+  border: 1px solid var(--field); border-radius: var(--radius);
+}
+.picker:hover { border-color: var(--accent); }
+.picker[disabled] { opacity: 0.5; }
+
+/* --- what the server said about one line ---------------------------------- */
+
+.txn-note > td { padding: 0; border-bottom: 1px solid var(--rule); }
+.txn-note__cell {
+  padding: 10px 14px;
+  background: var(--wash-neutral);
+  border-left: 3px solid var(--rule-strong);
+  font-size: 13px;
+}
+.txn-note__cell--ok { background: var(--wash-ok); border-left-color: var(--ok); }
+.txn-note__cell--fail { background: var(--wash-fail); border-left-color: var(--fail); }
+.txn-note__stale { margin-bottom: 10px; }
+.txn-note__stale .btn { margin-top: 6px; }
+
+/* --- pager ---------------------------------------------------------------- */
+
+.pager {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 16px;
+}
+.pager:empty { margin-top: 0; }
+.pager__range { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* --- narrow ---------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  .control--wide { flex-basis: 100%; }
+  .control__field { width: 100%; }
+  .txn-table { font-size: 12px; }
+  .txn__desc { min-width: 12rem; }
+  .picker { max-width: 8.5rem; }
+}
