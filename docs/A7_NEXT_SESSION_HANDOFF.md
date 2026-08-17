@@ -244,12 +244,19 @@ Windows-only 范围声明与开源前隐私审计也已完成（STATUS §5bh）�
 清理、全量身份检索零命中；留给产品负责人的两项披露决定——提交作者 gmail 的首次 push 前处置，
 以及 README 故事真实聚合数字是否改写为合成值。
 
-仍未完成：候选 wire 附加 template/occurrences 字段（P2 增量，牵动 AGENT_CONTRACT 措辞）；triage
-自动接跑（残池近零，优先级已降）；
-用户级 triage 安装、installer 卸载/真实旧版本升级矩阵、macOS/Linux 与真实发布包 smoke、
-NVDA/JAWS/VoiceOver/其他浏览器、SECURITY/私密漏洞流程、真实托管 CI、合成端到端贡献 fixture、
-README Developer Preview 边界、版本/变更日志/回滚，以及第一次 push 前的 Git 历史隐私决定。没有这些
-证据不得把 A7、Developer Preview 或稳定发布宣称完成。
+开源发布已完成（2026-08-17）：真实数字合成化、机器路径清除、历史 squash 为单根提交（中性作者，
+完整开发史只在本地 `archive/pre-squash-history`，**永不 push**）；SECURITY.md（无邮箱，走 GitHub
+私密报告，仓库开关已开启）与 CHANGELOG（0.1.0a1，与 pyproject 同源，守卫锁死）；README 重写为
+~120 行用户视角（SVG logo、徽章、亮点表、mermaid 流程、一句话装机优先，scope 表保留）；已 push 至
+github.com/51351879/Open-ledgerbox，**第二次托管 CI 全绿**——首轮红灯修复：矩阵裁为 Windows-only
+（与 scope 声明一致，非 Windows mypy 红灯恰证明该决定）、guard 路径测试 resolve 两侧（runner 的
+DOS 8.3 短路径）、gitleaks 换 pinned 二进制全史扫描（wrapper action 在分支首推时无 base range）。
+
+仍未完成：发布 smoke 的 CI package job（RELEASE_PLAN §4a：build wheel → 全新 venv 装 [mcp] → 三条
+命令断言）；PyPI 首发与 `uvx` 冷启动 smoke；候选 wire 附加 template/occurrences 字段（P2 增量，
+牵动 AGENT_CONTRACT 措辞）；triage 自动接跑（残池近零，backlog）；用户级 triage 安装、installer
+卸载/真实旧版本升级矩阵、合成端到端贡献 fixture。macOS/Linux 与其他读屏器/浏览器按 README scope
+表长期归社区。没有 package smoke 与 PyPI 证据不得宣称"可安装的稳定发布"。
 
 ## 7. 距离开源还缺什么
 
