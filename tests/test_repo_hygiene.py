@@ -145,6 +145,40 @@ def _relative(path: Path) -> str:
     return path.relative_to(REPO_ROOT).as_posix()
 
 
+def test_the_security_policy_ships_and_names_no_mailbox() -> None:
+    """SECURITY.md must exist for GitHub's reporting flow to point anywhere,
+    and it must not contain an e-mail address: the reporting channel is the
+    platform's private-advisory form, and no personal mailbox belongs in a
+    public repository this project went to lengths to keep identity-free.
+    """
+    policy = (REPO_ROOT / "SECURITY.md").read_text(encoding="utf-8")
+    assert "vulnerability" in policy.lower()
+    assert "THREAT_MODEL" in policy
+    assert re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", policy) is None, (
+        "the security policy must route through the platform, not a mailbox"
+    )
+
+
+def test_the_changelog_leads_with_the_packaged_version() -> None:
+    """One version, stated twice, compared: pyproject is the source of truth
+    and the changelog's newest entry must be about that version -- the release
+    gate in docs/RELEASE_PLAN.md §2 depends on this equality staying true.
+    """
+    import tomllib
+
+    packaged = tomllib.loads(
+        (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )["project"]["version"]
+    changelog = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    first_heading = next(
+        line for line in changelog.splitlines() if line.startswith("## ")
+    )
+    assert packaged in first_heading, (
+        f"the changelog's newest entry {first_heading!r} is not about the "
+        f"packaged version {packaged!r}"
+    )
+
+
 def test_the_hash_exemption_hides_hashes_and_nothing_else() -> None:
     """The check's own counterexamples: discipline rule 7 applies to guards too."""
     hash_line = (
