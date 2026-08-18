@@ -11,6 +11,8 @@
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows%2011-0078d4)](#-scope-what-actually-works)
 [![Version](https://img.shields.io/badge/version-0.1.0a1--preview-orange)](CHANGELOG.md)
 
+**English** · [简体中文](README.zh-CN.md)
+
 Drop a bank statement PDF on a page running on **your own machine**.
 It is parsed, **reconciled against the statement's own printed totals**, and only then booked.
 Your own AI — Codex or Claude Code — classifies it through a strict local bridge.

@@ -50,6 +50,14 @@ scope section for exactly what "supported" means here.
   and is idempotent. Checked-in setup Skills let "set this project up" in
   either client resolve to that command.
 
+### Reading it
+
+- The front page is available in Simplified Chinese
+  ([README.zh-CN.md](README.zh-CN.md)), with a glossary pinning the words the
+  project's honesty depends on. Category IDs, amounts, commands and wire
+  values are not translated. Everything under `docs/` is English only, and
+  the translated page says so rather than implying otherwise.
+
 ### Known boundaries
 
 - One bank, one account type, one platform. CSV import, other banks,
