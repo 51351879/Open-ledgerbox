@@ -2945,6 +2945,38 @@ Chromium 系浏览器 + Narrator（Agent 流）为受支持且逐门验证过的
 
 ---
 
+## 5bk. 发布 smoke 进 CI：装的是 wheel，不是这棵树（2026-08-17）
+
+`RELEASE_PLAN.md` §4a 落地。除它之外每个 CI job 跑的都是源码树；`package` job 跑的是
+用户真正会拿到的东西。差别不是形式上的：官方 Skill 靠 `pyproject.toml` 的 `force-include`
+进 wheel，而在 checkout 里 Skill 本来就在那儿，所以**没有任何针对源码树的测试能验证这条路径**。
+job 在 `windows-latest` 上 `python -m build`（默认先出 sdist、再由 sdist 构建 wheel，
+这样才抓得住"wheel 从工作树顺手带走、真实下载里没有"的文件），把 wheel 连 `[mcp]` extra
+装进仓库外一个空 venv，再用那个 venv 的解释器跑 `tools/package_smoke.py`。
+
+断言不写在 YAML 里。写进 YAML 的判断没有 mypy 看、没有反例够得到，正是这个仓库
+反复记录的那种"检查存在但没人见它红过"。脚本里是纯函数，`tests/test_package_smoke.py`
+逐条证伪：版本三方比对、缺 `ledgerbox-mcp` 程序、wheel 里没有 Skill、Skill 在但不谈判、
+契约缺 `proposal_schema_version`、路径包含关系两侧都 resolve。
+
+两条断言是关于这个 smoke 自己的：`agent_workspace_root()` **先找 checkout 再找包内**，
+所以一次够得着源码树的运行（editable 安装、`PYTHONPATH`、工作目录进 `sys.path`）会在
+wheel 一个 Skill 都没带的情况下报"Skill 齐全"。脚本因此断言 `ledgerbox.__file__` 与
+解析出的 workspace 都在 venv 里。这不是假想：用 checkout 自己的 `.venv` 跑一次，它
+正确地红了并指名"this run tested the checkout"。
+
+本轮 smoke 抓到自己第一个缺陷。第一版照抄产品里的 `_runner_skill_compatible`——
+把 Skill 与 `AGENT_CONTRACT.md` **拼接后**搜标记；而契约独自包含全部三个标记，
+于是把已装 wheel 里 22 行的 Claude Skill 换成一行废话，脚本照样打印 `ok:`。
+现在两份文档各按各的内容判：Skill 必须自己写出 `review_first` 与 `automatic`，
+`proposal_schema_version` 只在契约里断言。掏空 Skill 的同一个实验现在红，理由准确。
+顺带补上一条从来没人写过的等式：`pyproject.toml` 的 `version` 与 `ledgerbox/__init__.py`
+的 `__version__` 是两个文件里的两个字面量，changelog 闸门只读前者，CLI 只印后者。
+
+未做的仍未做：PyPI 首发与 `uvx` 冷启动 smoke 是 §4b，README 的 "Not yet on PyPI" 保持事实。
+
+---
+
 ## 6. 未完成
 
 ### P2 —— 分析与前端

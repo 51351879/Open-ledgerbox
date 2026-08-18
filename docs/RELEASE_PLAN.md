@@ -69,6 +69,15 @@ runner 上的安装方式、npm/node 版本 pin、pip 缓存。每个红灯按"�
 三条命令断言）；(b) 作为首次 PyPI 发布的人工清单项。macOS/Linux smoke 明确
 不做（范围声明已写），社区 PR 附带各自平台的 CI job 才算支持。
 
+**(a) 已完成（2026-08-17，见 `STATUS.md` §5bk）**：`package` job 在
+`windows-latest` 上 `python -m build`（sdist 先出、wheel 由 sdist 构建）→
+仓库外全新 venv 装 `<wheel>[mcp]` → 用该 venv 的解释器跑
+`tools/package_smoke.py`。断言不写在 YAML 里而是写在那个脚本里，因为写进 YAML
+的判断没有类型检查也没有反例能够到；`tests/test_package_smoke.py` 逐条证伪它。
+脚本额外断言 `ledgerbox` 是从 venv 而不是 checkout 导入的、workspace 解析到包内
+而不是树内——`agent_workspace_root()` 优先找 checkout，所以少了这两条，一个什么
+Skill 都没带的 wheel 也会报绿。**(b) 仍未做**，README 的 "Not yet on PyPI" 保持事实。
+
 ## 5. 候选 wire template/occurrences 字段
 
 **设计**：`ledgerbox_candidates` 每个候选附加两个只读字段：

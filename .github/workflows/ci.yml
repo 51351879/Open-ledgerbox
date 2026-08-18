@@ -193,6 +193,51 @@ jobs:
               )
           PY
 
+  package:
+    # docs/RELEASE_PLAN.md §4a. Every other job here runs the source tree; this
+    # one runs what a user would actually receive. The two are not the same
+    # question, and the gap between them is where a packaging mistake lives:
+    # the official Skill reaches the wheel through `force-include` entries in
+    # pyproject, which no test of the checkout can exercise, because in a
+    # checkout the Skill is simply there.
+    #
+    # Windows, matching the scope declaration. The console scripts are `.exe`
+    # shims here and shell scripts elsewhere, so "the bridge is installed" is a
+    # platform-specific question and this is the platform that is supported.
+    name: the wheel installs and answers
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build
+        # `python -m build` with no flags builds the sdist first and then the
+        # wheel *from that sdist*, which is the arrangement that catches a file
+        # the wheel would have picked up out of the working tree and a real
+        # download would not have contained.
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Install into an environment with nothing else in it
+        # Outside the checkout on purpose. An environment created inside the
+        # tree invites the tree onto `sys.path`, and the whole point of the
+        # next step is that it cannot reach the tree.
+        run: |
+          python -m venv "${{ runner.temp }}\fresh"
+          $wheels = @(Get-ChildItem dist\*.whl)
+          if ($wheels.Count -ne 1) { throw "expected one wheel, built $($wheels.Count)" }
+          & "${{ runner.temp }}\fresh\Scripts\python.exe" -m pip install "$($wheels[0].FullName)[mcp]"
+
+      - name: The artifact answers for itself
+        # The assertions are in tools/package_smoke.py, type-checked by mypy and
+        # refuted one at a time by tests/test_package_smoke.py. Retyping them
+        # into this file would put the gate somewhere nothing can test it.
+        run: '& "${{ runner.temp }}\fresh\Scripts\python.exe" tools/package_smoke.py'
+
   no-data-files:
     name: no statements in the index
     runs-on: ubuntu-latest
