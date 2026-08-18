@@ -2977,6 +2977,34 @@ wheel 一个 Skill 都没带的情况下报"Skill 齐全"。脚本因此断言 `
 
 ---
 
+## 5bl. 发布管线就绪，密钥不存在（2026-08-17）
+
+§4b 的机械部分做完了，**没有发布任何东西**。`ci.yml` 新增两个只在 `refs/tags/v*` 上跑的 job：
+`release-tag` 断言 tag 与 `pyproject.toml` 版本是同一个数，`publish` 用 PyPI Trusted
+Publishing 上传。`publish` 的 `needs` 列出上面每一个 job——通往 PyPI 的路径不绕过任何一条
+测试、密扫或 wheel smoke，因为"另写一个 release workflow"就是给"绿"下第二个定义，
+这个仓库在第二个定义上已经付够学费了（§5.29、§5.94）。
+
+**没有密钥需要谁代持。** Trusted Publishing 让 PyPI 校验这个 workflow 的 OIDC 身份，
+只为这一次上传签发短期令牌；仓库里不存在可泄露、可轮换的 API token——与"账本不持有模型密钥"
+是同一条理由，不是巧合。产品负责人要做的是在 pypi.org 配 pending publisher、
+（建议）给 GitHub 环境 `pypi` 加 required reviewer、然后推 tag；步骤与预期写在
+`RELEASE_PLAN.md` 的首发清单里。
+
+tag 闸门单独成文件是因为它防的错不可修：PyPI 的文件名只接受一次，删了也不让重传。
+`tag_failures()` 用去掉一个前导 `v` 之后的**相等**判断，不是前缀、不是归一化——
+`v0.1.0` 与 `v0.1.0a1` 差的那个后缀恰好决定 `pip install ledgerbox` 默认装到哪一个，
+一个宽容到把它们当同一个的检查，宽容的正是伤人的方向。反例覆盖两个方向的前缀、
+缺 `v`、以及空 `GITHUB_REF_NAME`（在没有 tag 的地方放行，就是把守卫变成装饰）。
+
+`publish` 不重新构建：它下载 `package` job 上传的那个 wheel。同一棵树构建两次不保证
+同样的字节，而"我们测过的那一个"必须真的指测过的那一个。
+
+只读核对：`https://pypi.org/pypi/ledgerbox/json` 当日返回 404，名字未被占用——先到先得，
+不是预留。README 的 `Not yet on PyPI` 一字未动，因为它现在仍然是真的。
+
+---
+
 ## 6. 未完成
 
 ### P2 —— 分析与前端

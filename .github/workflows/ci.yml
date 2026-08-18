@@ -17,6 +17,11 @@ name: CI
 on:
   push:
     branches: ["**"]
+    # Tags too, because publishing lives at the bottom of this file and it
+    # `needs:` every job above it. Nothing reaches PyPI that did not pass the
+    # same gates a branch push does -- a separate release workflow would have
+    # been a second, weaker definition of "green".
+    tags: ["v*"]
   pull_request:
 
 permissions:
@@ -238,6 +243,16 @@ jobs:
         # into this file would put the gate somewhere nothing can test it.
         run: '& "${{ runner.temp }}\fresh\Scripts\python.exe" tools/package_smoke.py'
 
+      - name: Keep the artifact that passed
+        # So `publish` uploads *this* wheel rather than a second build of the
+        # same commit. Two builds of one tree are not guaranteed to be the same
+        # bytes, and "the one we tested" has to mean the one we tested.
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
   no-data-files:
     name: no statements in the index
     runs-on: ubuntu-latest
@@ -276,3 +291,56 @@ jobs:
         uses: trufflesecurity/trufflehog@v3.90.10
         with:
           extra_args: --results=verified,unknown
+
+  release-tag:
+    # A tag is a promise about which commit a version came from. This is the
+    # gate that keeps the promise checkable, and it runs before the artifact is
+    # anywhere near an index: PyPI accepts a filename once and refuses it
+    # forever after, so "we will fix the tag" is not available as a remedy.
+    #
+    # The comparison itself is in tools/check_release_tag.py, with its
+    # counterexamples in tests/test_release_tag.py -- including the one that
+    # matters here, `v0.1.0` against a packaged `0.1.0a1`, which any prefix
+    # comparison would have waved through.
+    name: the tag and the version are one number
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/check_release_tag.py
+
+  publish:
+    # Everything above, and only then. There is no path to PyPI that skips a
+    # test, a secret scan or the wheel smoke, because the alternative -- a
+    # release workflow with its own idea of green -- is a second definition of
+    # the same word, and this project has spent enough on those.
+    name: publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, beancount, web, package, no-data-files, secrets, release-tag]
+    runs-on: ubuntu-latest
+
+    # Trusted Publishing: PyPI verifies this workflow's OIDC identity and
+    # issues a short-lived token for that upload alone. No API token exists to
+    # be stored, leaked, or rotated -- which is the same argument the rest of
+    # this repository makes about the ledger never holding a model key.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ledgerbox
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Take the artifact the smoke test installed
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Upload
+        # Pinned to a release, not to `release/v1`, which is a branch that
+        # moves. The step that can publish under this project's name is the
+        # last place to run whatever was newest that morning.
+        uses: pypa/gh-action-pypi-publish@v1.14.2

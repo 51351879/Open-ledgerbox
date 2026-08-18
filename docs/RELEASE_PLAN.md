@@ -113,3 +113,52 @@ uncertain 的理由进人工清单。复用 A7.4 的 job 队列：`trigger_kind=
 3. GitHub 仓库开 private vulnerability reporting；
 4. 第一次 CI 运行全绿或逐红修复；
 5. README 徽章、PyPI 声明与事实一致。
+
+以上五项已于 2026-08-16/17 全部完成。
+
+---
+
+## 首次 PyPI 发布清单（§4b，产品负责人执行）
+
+发布管线已就绪，**缺的只有凭据，且凭据不该存在**：`ci.yml` 的 `publish` job 用
+PyPI Trusted Publishing（OIDC），PyPI 校验这个 workflow 的身份后签发一次性短期
+令牌，仓库里没有任何 API token 可被泄露或需要轮换——和"账本从不持有模型密钥"
+是同一条理由。因此没有任何密钥需要交给谁代持。
+
+**产品负责人的三步：**
+
+1. **在 PyPI 配置 Trusted Publisher。** 登录 pypi.org →（首发用 pending publisher，
+   因为项目名还不存在）Your projects → Publishing → Add a new pending publisher：
+   - PyPI Project Name: `ledgerbox`
+   - Owner: `51351879`，Repository name: `Open-ledgerbox`
+   - Workflow name: `ci.yml`
+   - Environment name: `pypi`
+
+   2026-08-17 只读核对：`https://pypi.org/pypi/ledgerbox/json` 返回 404，名称当时未被占用；
+   这不是预留，先到先得。若届时已被占用，先改 `pyproject.toml` 的 `name` 与 README 的安装
+   说明，再回到这一步——**不要**用近似名硬发。
+
+2.（可选但建议）**给 GitHub 环境 `pypi` 加保护规则**：Settings → Environments →
+   `pypi` → Required reviewers 填自己。加了之后每次 tag 推送会停在等待批准，
+   发布从"推一个 tag"变成"推一个 tag 并按一次确认"。
+
+3. **打 tag 并推送：**
+
+   ```
+   git tag -a v0.1.0a1 -m "ledgerbox 0.1.0a1"
+   git push origin v0.1.0a1
+   ```
+
+   预期：CI 在 tag 上跑完整矩阵 + `package` smoke + 新增的
+   `the tag and the version are one number`；全绿后 `publish` 才拿
+   **`package` job 上传的那个 wheel**（不是第二次构建）传到 PyPI。
+   若 tag 与 `pyproject.toml` 版本不一致，`release-tag` job 先红，什么都不会上传。
+
+**发布后（可以交回给下一个 session 执行）：**
+
+4. `uvx ledgerbox --version` 冷启动 smoke——在一台没装过 ledgerbox 的 Windows 上跑，
+   预期打印 `ledgerbox 0.1.0a1`；再 `uvx --from "ledgerbox[mcp]" ledgerbox-mcp --help`
+   预期打印 usage 并退出 0。
+5. 只有 4 通过之后，才把 README 的 `Not yet on PyPI — run from a checkout.` 改成事实
+   （安装命令 + 仍需 `ledgerbox setup` 的说明），并在 CHANGELOG 记一行。
+   **在此之前那句话必须留着**——它现在是真的。
