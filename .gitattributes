@@ -9,6 +9,14 @@
 *.md    text eol=lf
 *.toml  text eol=lf
 *.json  text eol=lf
+# The Codex Skill's metadata file is hashed into the official-bundle catalogue
+# in agent_skill_install.py, so its bytes have to be the same on every checkout.
+# They were not: a Windows worktree predating `* text=auto eol=lf` kept CRLF, so
+# one machine's packaged fingerprint differed from every other machine's and
+# from CI. Stated explicitly here because a rule you can see is a rule somebody
+# checks.
+*.yaml  text eol=lf
+*.yml   text eol=lf
 
 # Never touch binaries.
 *.pdf   binary

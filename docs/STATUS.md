@@ -3134,7 +3134,16 @@ Node 从 70 涨到 **95**；Python 1122 passed / 100 skipped 不变——既有�
 已实测：随手往契约里加一行注释，它当场红。另一条新用例断言每个已记录版本与出厂版本文件集合相同——
 文件清单不同的包根本不会被认出来。
 
-Python 1130 passed / 100 skipped、Node 95/95、ruff、mypy strict、repo-data、diff check 全绿。
+**绊线第一件真实战果是它自己。** 本机全绿，托管 runner 红，同一个提交、只差一个文件：
+`agents/openai.yaml` 在本机 CRLF、在 CI LF。也就是说**整个指纹目录里 codex 那一列一直描述的是
+一台机器，不是一个发布**——`.gitattributes` 早就写着 `* text=auto eol=lf`，只是本机那份工作树
+早于该规则、一直留着 CRLF，而当年那条"要按工作树字节入册"的教训又正好把这个偏差固化了进去。
+处理：`.gitattributes` 显式加 `*.yaml/*.yml text eol=lf`（看得见的规则才有人核对），
+本机工作树规范化为 LF（索引本来就是 LF，`git diff` 为空），钉子改成 LF 值，
+目录里每个 codex 版本按两种换行各记一份——两种都是真的有人装过的包。
+
+Python 1130 passed / 100 skipped、Node 95/95、ruff、mypy strict、repo-data、diff check 全绿；
+托管 CI 在修复后转绿。
 
 ---
 

@@ -268,14 +268,45 @@ _BEFORE_TRANSLATE_SKILL_NOTE: dict[AgentClient, dict[str, str]] = {
     for client in ("codex", "claude-code")
 }
 
+# The Codex metadata file, hashed twice: once as every checkout produces it
+# (LF, which `.gitattributes` has always asked for) and once as a Windows
+# worktree predating that rule kept it (CRLF).
+#
+# Every codex fingerprint recorded above was taken on such a worktree, so the
+# catalogue described one machine rather than the release -- CI hashed the same
+# file to the other value, on the same commit. That is the earlier CRLF lesson
+# arriving from the other direction: it is right that installs read the working
+# tree, and wrong that the recorded bundle depended on whose working tree.
+#
+# Both are real bundles somebody may have installed, so both belong here. The
+# file is normalised now and every future checkout is LF.
+_LF_CODEX_METADATA = "f1ad08856ce85cfbf4c908d62d1bc4ebc5947d9e4b705a56c9d753fb28be37a1"
+_CRLF_CODEX_METADATA = "1cb29aeb8b34557a694b1854621b314a82bd8f939b46ee3f8c86686ff79b5f2b"
+
+
+def _either_line_ending(bundles: tuple[dict[str, str], ...]) -> tuple[dict[str, str], ...]:
+    """Each recorded bundle, once per line-ending convention of its metadata file."""
+    recorded: list[dict[str, str]] = []
+    for bundle in bundles:
+        recorded.append(bundle)
+        current = bundle.get("agents/openai.yaml")
+        if current is None:
+            continue
+        other = _CRLF_CODEX_METADATA if current == _LF_CODEX_METADATA else _LF_CODEX_METADATA
+        recorded.append({**bundle, "agents/openai.yaml": other})
+    return tuple(recorded)
+
+
 PREVIOUS_OFFICIAL_BUNDLES: dict[AgentClient, dict[str, tuple[dict[str, str], ...]]] = {
     "codex": {
-        OFFICIAL_SKILL_VERSION: (
-            _BEFORE_ONE_COMMAND_SETUP["codex"],
-            _BEFORE_ABSTENTION_PROTOCOL["codex"],
-            _BEFORE_PASTE_SAFE_SETUP["codex"],
-            _BEFORE_TRANSLATE_SKILL_NOTE["codex"],
-            _BEFORE_CANDIDATE_TEMPLATE_FIELDS["codex"],
+        OFFICIAL_SKILL_VERSION: _either_line_ending(
+            (
+                _BEFORE_ONE_COMMAND_SETUP["codex"],
+                _BEFORE_ABSTENTION_PROTOCOL["codex"],
+                _BEFORE_PASTE_SAFE_SETUP["codex"],
+                _BEFORE_TRANSLATE_SKILL_NOTE["codex"],
+                _BEFORE_CANDIDATE_TEMPLATE_FIELDS["codex"],
+            )
         ),
     },
     "claude-code": {

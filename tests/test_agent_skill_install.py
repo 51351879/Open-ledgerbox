@@ -280,7 +280,11 @@ def test_unknown_client_fails_before_creating_any_directory(git_free_tmp: Path) 
 SHIPPED_BUNDLES: dict[str, dict[str, str]] = {
     "codex": {
         "SKILL.md": "e07e069879343f672d7b1ffeca140f14264f3e1cfb987ae7e3ec080b5cc07b4f",
-        "agents/openai.yaml": "1cb29aeb8b34557a694b1854621b314a82bd8f939b46ee3f8c86686ff79b5f2b",
+        # LF, which is what `.gitattributes` asks for and what every checkout
+        # produces. The first value pinned here was the CRLF one a stale Windows
+        # worktree kept, and CI hashed the same commit to the other value -- this
+        # tripwire`s first real catch was its own machine-dependence.
+        "agents/openai.yaml": "f1ad08856ce85cfbf4c908d62d1bc4ebc5947d9e4b705a56c9d753fb28be37a1",
         "references/agent-contract.md": (
             "4ece1d61c15aad490edfff72357aa6a8050fbb5e5f670615578c3f7a072e5351"
         ),
@@ -350,6 +354,10 @@ def test_the_shipped_bundle_is_the_one_recorded_here(client: str) -> None:
 
     Skipping steps 1 and 2 leaves every existing personal install looking
     custom, which stops the safe upgrade rather than performing it.
+
+    If it fails on `agents/openai.yaml` alone, suspect line endings before
+    suspecting an edit: the packaged bytes have to be the same on every
+    checkout, and `.gitattributes` is where that is settled.
     """
     shipped = {
         name: agent_skill_install._digest(content)
@@ -370,6 +378,13 @@ def test_every_bundle_this_project_ever_shipped_upgrades_without_force(client: s
     shipped = SHIPPED_BUNDLES[client]
 
     assert len(recorded) >= 5, "one entry per bundle replaced, and none of them removed"
+    if client == "codex":
+        metadata = {bundle["agents/openai.yaml"] for bundle in recorded}
+        assert len(metadata) == 2, (
+            "each codex bundle is recorded under both line-ending conventions: the "
+            "fingerprints were taken on a worktree that kept CRLF while every other "
+            "checkout, CI included, produced LF"
+        )
     assert shipped not in recorded, "the current bundle is not a previous one"
     for previous in recorded:
         assert set(previous) == set(shipped), (
