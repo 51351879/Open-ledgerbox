@@ -146,8 +146,10 @@ PyPI Trusted Publishing（OIDC），PyPI 校验这个 workflow 的身份后签�
    当时未被占用。若届时已被抢注，先改 `pyproject.toml` 的 `name` 与 README 的安装说明，
    再回到这一步——**不要**用近似名硬发。
 
-2.（可选但建议）**给 GitHub 环境 `pypi` 加保护规则**：Settings → Environments →
-   `pypi` → Required reviewers 填自己。加了之后每次 tag 推送会停在等待批准，
+2. ~~（可选但建议）**给 GitHub 环境 `pypi` 加保护规则**~~ **已完成（2026-08-18）。**
+   Settings → Environments → `pypi`，Required reviewers 为产品负责人本人。
+   `Prevent self-review` 保持**关闭**——单人仓库开了它就没有任何人能批准，
+   那不是更严格，那是发不出去。每次 tag 推送现在会停在 `publish` 等待批准，
    发布从"推一个 tag"变成"推一个 tag 并按一次确认"。
 
 3. **打 tag 并推送：**
