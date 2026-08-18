@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
@@ -20,6 +21,7 @@ from .agent_center import AgentPolicy, read_policy
 from .config import DataPaths
 from .db import repo
 from .db.migrate import schema_version
+from .descriptor_template import descriptor_template
 from .ingest.pipeline import verify_ledger
 from .proposals import (
     APPLICATION_MODES,
@@ -105,12 +107,36 @@ class AgentCategoryCatalog:
 
 @dataclass(frozen=True, slots=True)
 class AgentCandidate:
+    """One unanswered line, and the two facts that say which others are like it.
+
+    ``descriptor_template`` and ``occurrences`` are **evidence, not
+    instruction**. Before them an Agent had to guess from raw descriptors which
+    lines were the same merchant, and it guessed with the same string it was
+    told to treat as untrusted data. The template is the repository's own
+    :func:`~ledgerbox.descriptor_template.descriptor_template` -- the exact unit
+    the learning loop keys on -- so a grouped proposal and the rule the answer
+    teaches now speak one vocabulary.
+
+    What they do not do is lower the bar. A shared template says two lines came
+    from one counterparty, not that they mean the same thing: a refund and a
+    purchase share a merchant, and direction is on the line rather than in the
+    template. The abstention rule is unchanged, per line.
+    """
+
     txn_id: str
     date: str
     direction: Literal["in", "out", "zero"]
     amount_minor: int
     currency: str
     raw_descriptor: str
+    #: Empty when the descriptor identifies nobody -- all dates and reference
+    #: numbers. The empty template groups nothing: it is the learning loop's
+    #: signal to refuse, and it has to mean the same thing here.
+    descriptor_template: str
+    #: How many lines **in this response** share that template, counting this
+    #: one. Scoped to the response because that is what the Agent can act on;
+    #: a ledger-wide count would invite a proposal about lines it never saw.
+    occurrences: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -209,6 +235,11 @@ def agent_candidates_to_wire(batch: AgentCandidateBatch) -> dict[str, Any]:
                 "currency": candidate.currency,
                 # This is untrusted bank data, not an instruction to an Agent.
                 "raw_descriptor": candidate.raw_descriptor,
+                # Derived from that same untrusted string, and equally not an
+                # instruction: evidence about which other lines are the same
+                # merchant, which the Agent previously had to infer.
+                "descriptor_template": candidate.descriptor_template,
+                "occurrences": candidate.occurrences,
             }
             for candidate in batch.candidates
         ],
@@ -379,6 +410,12 @@ def read_agent_candidates(
     query = _uncategorized_query(since=since, until=until, limit=limit)
     summary = repo.summarize_transactions(conn, query)
     rows = repo.list_transactions(conn, query)
+    templates = [descriptor_template(str(row["raw_descriptor"])) for row in rows]
+    # Counted over the rows actually returned, so `occurrences` describes this
+    # response and nothing outside it. An empty template identifies nobody and
+    # must group nobody -- counting it would report every anonymous line as one
+    # large cluster, which is the opposite of what the number is for.
+    clusters = Counter(template for template in templates if template)
     candidates = tuple(
         AgentCandidate(
             txn_id=str(row["txn_id"]),
@@ -393,8 +430,10 @@ def read_agent_candidates(
             amount_minor=int(row["amount_minor"]),
             currency=str(row["currency"]),
             raw_descriptor=str(row["raw_descriptor"]),
+            descriptor_template=template,
+            occurrences=clusters[template] if template else 1,
         )
-        for row in rows
+        for row, template in zip(rows, templates, strict=True)
     )
     return AgentCandidateBatch(
         ledger_revision=ledger_revision(conn),

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -262,3 +263,116 @@ def test_unknown_client_fails_before_creating_any_directory(git_free_tmp: Path) 
     with pytest.raises(ValueError, match="client"):
         install_user_skill("other", home=git_free_tmp)
     assert list(git_free_tmp.iterdir()) == []
+
+
+#: Exactly what this release ships, per client. A tripwire, not documentation.
+#:
+#: The catalogue in ``agent_skill_install`` records bundles the project has
+#: *already replaced*, so nothing in it can notice a replacement happening. On
+#: 2026-08-17 a paragraph was added to ``docs/AGENT_SETUP.md`` -- a file two
+#: directories from any Skill -- which is packaged as
+#: ``references/agent-setup.md``. Every user's official fingerprint changed,
+#: no entry was recorded, and every untouched personal install would have been
+#: read as custom and blocked from the non-force upgrade path built for exactly
+#: that case. The suite was green throughout.
+#:
+#: This pin turns that into a red test whose message is the procedure.
+SHIPPED_BUNDLES: dict[str, dict[str, str]] = {
+    "codex": {
+        "SKILL.md": "e07e069879343f672d7b1ffeca140f14264f3e1cfb987ae7e3ec080b5cc07b4f",
+        "agents/openai.yaml": "1cb29aeb8b34557a694b1854621b314a82bd8f939b46ee3f8c86686ff79b5f2b",
+        "references/agent-contract.md": (
+            "4ece1d61c15aad490edfff72357aa6a8050fbb5e5f670615578c3f7a072e5351"
+        ),
+        "references/agent-setup.md": (
+            "a9e6afcb4915efc8c0cf721912ecd53464bea207b7274f10ebf533d0163c9480"
+        ),
+        "references/ambiguous-cases.md": (
+            "f92ea8a992923af9ac9d27824db290cac40d35c1fb4f66c64ae27c59881c44fa"
+        ),
+        "references/category-semantics.md": (
+            "4a2bc9b9605939ba7ba7a84d7cd9b32cb4359eeeaf08fc85cb7fcdc1869a2704"
+        ),
+        "references/grouping-and-abstention.md": (
+            "0f048158887d07dd7b1eb02e2956598eca993937ac4106ea69af1e2c1556ee34"
+        ),
+        "references/privacy-and-output.md": (
+            "c671130e7bf76ab83cee43731ed1ecf943ef48404d1ff52b1ae546dba0ebea49"
+        ),
+        "references/transfer-boundaries.md": (
+            "592b09b613ee4647fff195fb4680d6ea58df51e36134546e1847d356c2b75f4c"
+        ),
+        "references/workflow.md": (
+            "fb3d6ef7761edd2ab504cf9547b5c85c262b18443c7dfb9dd241725c14b0c36a"
+        ),
+    },
+    "claude-code": {
+        "SKILL.md": "7ffd854a8066a619ad938f3dfd5a50fd38f4651a662c21dfcb305e7c7c576f27",
+        "references/agent-contract.md": (
+            "4ece1d61c15aad490edfff72357aa6a8050fbb5e5f670615578c3f7a072e5351"
+        ),
+        "references/agent-setup.md": (
+            "a9e6afcb4915efc8c0cf721912ecd53464bea207b7274f10ebf533d0163c9480"
+        ),
+        "references/ambiguous-cases.md": (
+            "f92ea8a992923af9ac9d27824db290cac40d35c1fb4f66c64ae27c59881c44fa"
+        ),
+        "references/category-semantics.md": (
+            "4a2bc9b9605939ba7ba7a84d7cd9b32cb4359eeeaf08fc85cb7fcdc1869a2704"
+        ),
+        "references/grouping-and-abstention.md": (
+            "0f048158887d07dd7b1eb02e2956598eca993937ac4106ea69af1e2c1556ee34"
+        ),
+        "references/privacy-and-output.md": (
+            "c671130e7bf76ab83cee43731ed1ecf943ef48404d1ff52b1ae546dba0ebea49"
+        ),
+        "references/transfer-boundaries.md": (
+            "592b09b613ee4647fff195fb4680d6ea58df51e36134546e1847d356c2b75f4c"
+        ),
+        "references/workflow.md": (
+            "fb3d6ef7761edd2ab504cf9547b5c85c262b18443c7dfb9dd241725c14b0c36a"
+        ),
+    },
+}
+
+
+@pytest.mark.parametrize("client", ["codex", "claude-code"])
+def test_the_shipped_bundle_is_the_one_recorded_here(client: str) -> None:
+    """Any edit to a packaged file has to pass through this assertion.
+
+    When it fails, the fix is never to paste the new digests over the old ones
+    and move on:
+
+    1. copy the digests **this test currently expects** into a new
+       ``_BEFORE_<what-changed>`` map in ``agent_skill_install.py``;
+    2. add that map to ``PREVIOUS_OFFICIAL_BUNDLES`` for both clients;
+    3. only then update the values below.
+
+    Skipping steps 1 and 2 leaves every existing personal install looking
+    custom, which stops the safe upgrade rather than performing it.
+    """
+    shipped = {
+        name: agent_skill_install._digest(content)
+        for name, content in agent_skill_install._official_files(
+            cast(agent_skill_install.AgentClient, client)
+        ).items()
+    }
+    assert shipped == SHIPPED_BUNDLES[client]
+
+
+@pytest.mark.parametrize("client", ["codex", "claude-code"])
+def test_every_bundle_this_project_ever_shipped_upgrades_without_force(client: str) -> None:
+    """The catalogue's whole job, asserted over the catalogue rather than over
+    the two entries somebody remembered to test.
+    """
+    typed = cast(agent_skill_install.AgentClient, client)
+    recorded = agent_skill_install.PREVIOUS_OFFICIAL_BUNDLES[typed][OFFICIAL_SKILL_VERSION]
+    shipped = SHIPPED_BUNDLES[client]
+
+    assert len(recorded) >= 5, "one entry per bundle replaced, and none of them removed"
+    assert shipped not in recorded, "the current bundle is not a previous one"
+    for previous in recorded:
+        assert set(previous) == set(shipped), (
+            "a recorded bundle names the same files; a different file list is a "
+            "different shape of Skill and would not be recognised at all"
+        )

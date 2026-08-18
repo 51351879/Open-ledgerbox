@@ -93,6 +93,11 @@ Skill 都没带的 wheel 也会报绿。**(b) 仍未做**，README 的 "Not yet 
 旧 Skill 收到新字段不崩（宽进）、新 Skill 在旧 Core 上不假设字段存在
 （严出）；然后 Core/CLI/MCP 三处输出 + 两端 Skill 文本 + 契约文档一次提交。
 
+**已完成（2026-08-18，见 `STATUS.md` §5bo）**：Core/CLI/MCP 三处经同一个
+`agent_candidates_to_wire` 输出；契约新增 4a 条、`grouping-and-abstention.md` 新增五条边界，
+措辞与 dataclass docstring 一致。指纹目录按流程滚动，并补录了 §5bn 那次遗漏的一版；
+新增 `SHIPPED_BUNDLES` 绊线，让"改了被打包文件却没滚指纹"从静默变成红灯。
+
 ## 6. triage 自动接跑
 
 **设计**：分类链收束（completed / examined-and-declined）且残留未分类 > 0

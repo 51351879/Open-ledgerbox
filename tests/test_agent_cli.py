@@ -22,6 +22,7 @@ from ledgerbox.config import DataPaths
 from ledgerbox.db import repo
 from ledgerbox.db.connection import transaction
 from ledgerbox.db.migrate import open_ledger
+from ledgerbox.descriptor_template import descriptor_template
 from ledgerbox.ingest import archive
 from ledgerbox.ingest.pipeline import verify_ledger
 from ledgerbox.proposals import group_id_for, ledger_revision
@@ -39,10 +40,14 @@ class AgentLedger:
     txn_ids: tuple[str, ...]
 
 
-@pytest.fixture
-def agent_ledger(git_free_tmp: Path) -> Iterator[AgentLedger]:
-    """A synthetic ledger whose database and content-addressed archive agree."""
-    paths = DataPaths.resolve(git_free_tmp / "Agent data with spaces")
+def _ledger_with(root: Path, lines: list[Line], *, name: str = "Agent data") -> AgentLedger:
+    """A synthetic ledger whose database and content-addressed archive agree.
+
+    Factored out of the fixture so a test can state its own descriptors. The
+    candidate wire now reports which lines look like one counterparty, and that
+    cannot be exercised by a fixture whose lines are all different ones.
+    """
+    paths = DataPaths.resolve(root / name)
     conn = open_ledger(paths.db)
 
     source = paths.root / "synthetic-agent.pdf"
@@ -51,31 +56,25 @@ def agent_ledger(git_free_tmp: Path) -> Iterator[AgentLedger]:
     archived = archive.archive_file(paths, source, ingested_on=date(2026, 8, 8))
     source.unlink()
 
-    txn_ids = tuple(
-        book(
-            conn,
-            [
-                Line(-1_000, PROMPT_SHAPED_DESCRIPTOR, date="2025-05-06"),
-                Line(-2_000, "synthetic unclaimed two", date="2025-05-07"),
-                Line(3_000, "synthetic unclaimed income", date="2025-05-08"),
-                Line(
-                    -4_000,
-                    "synthetic rule answer",
-                    date="2025-05-09",
-                    rule_category="groceries",
-                ),
-                Line(
-                    -5_000,
-                    "synthetic human answer",
-                    date="2025-05-10",
-                    override="dining",
-                ),
-            ],
-            sha256=archived.sha256,
-        )
+    txn_ids = tuple(book(conn, lines, sha256=archived.sha256))
+    return AgentLedger(paths=paths, conn=conn, txn_ids=txn_ids)
+
+
+@pytest.fixture
+def agent_ledger(git_free_tmp: Path) -> Iterator[AgentLedger]:
+    ledger = _ledger_with(
+        git_free_tmp,
+        [
+            Line(-1_000, PROMPT_SHAPED_DESCRIPTOR, date="2025-05-06"),
+            Line(-2_000, "synthetic unclaimed two", date="2025-05-07"),
+            Line(3_000, "synthetic unclaimed income", date="2025-05-08"),
+            Line(-4_000, "synthetic rule answer", date="2025-05-09", rule_category="groceries"),
+            Line(-5_000, "synthetic human answer", date="2025-05-10", override="dining"),
+        ],
+        name="Agent data with spaces",
     )
-    yield AgentLedger(paths=paths, conn=conn, txn_ids=txn_ids)
-    conn.close()
+    yield ledger
+    ledger.conn.close()
 
 
 def _call(
@@ -297,10 +296,121 @@ def test_agent_candidates_are_verified_minimal_bounded_and_treat_descriptors_as_
         "amount_minor",
         "currency",
         "raw_descriptor",
+        "descriptor_template",
+        "occurrences",
     }
     assert payload["candidates"][0]["raw_descriptor"] == PROMPT_SHAPED_DESCRIPTOR
     assert payload["candidates"][0]["direction"] == "out"
     assert payload["candidates"][0]["amount_minor"] == -1_000
+
+
+def test_each_candidate_carries_the_repositorys_own_template_and_a_scoped_count(
+    agent_ledger: AgentLedger,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The template is the learning loop's, not a second derivation of it.
+
+    Two definitions of "the same merchant" would be exactly the defect
+    ``docs/STATUS.md`` §5.29 is about: the Agent grouping by one rule and the
+    rule its answer teaches keyed on another.
+    """
+    code, out, _ = _call(agent_ledger, ["candidates"], capsys=capsys, monkeypatch=monkeypatch)
+    assert code == 0
+    candidates = _one_json(out)["candidates"]
+
+    for candidate in candidates:
+        assert candidate["descriptor_template"] == descriptor_template(
+            candidate["raw_descriptor"]
+        )
+        assert candidate["occurrences"] >= 1
+
+    # Three unanswered lines, three different counterparties.
+    assert [candidate["occurrences"] for candidate in candidates] == [1, 1, 1]
+
+
+def test_lines_from_one_counterparty_report_each_other(
+    git_free_tmp: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Per-visit digits vary and the template does not, which is the whole point:
+    without this the Agent had to infer the cluster from the raw string it is
+    told to treat as untrusted data.
+    """
+    ledger = _ledger_with(
+        git_free_tmp,
+        [
+            Line(-1_100, "COFFEE BAR 4471 05/06", date="2025-05-06"),
+            Line(-1_200, "COFFEE BAR 9930 05/07", date="2025-05-07"),
+            Line(-9_900, "SOMETHING ELSE ENTIRELY", date="2025-05-08"),
+        ],
+    )
+    code, out, _ = _call(ledger, ["candidates"], capsys=capsys, monkeypatch=monkeypatch)
+    assert code == 0
+    candidates = _one_json(out)["candidates"]
+
+    assert [candidate["descriptor_template"] for candidate in candidates] == [
+        "COFFEE BAR # #/#",
+        "COFFEE BAR # #/#",
+        "SOMETHING ELSE ENTIRELY",
+    ]
+    assert [candidate["occurrences"] for candidate in candidates] == [2, 2, 1]
+    ledger.conn.close()
+
+
+def test_a_descriptor_that_identifies_nobody_groups_nobody(
+    git_free_tmp: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An all-numeric descriptor has an empty template, and the empty template is
+    the learning loop's refusal to key on it. Counting those together would
+    report every anonymous line as one large cluster -- a number that invites
+    precisely the grouped proposal the abstention rule forbids.
+    """
+    ledger = _ledger_with(
+        git_free_tmp,
+        [
+            Line(-1_100, "202505 4471", date="2025-05-06"),
+            Line(-1_200, "202506 9930", date="2025-05-07"),
+        ],
+    )
+    code, out, _ = _call(ledger, ["candidates"], capsys=capsys, monkeypatch=monkeypatch)
+    assert code == 0
+    candidates = _one_json(out)["candidates"]
+
+    assert [candidate["descriptor_template"] for candidate in candidates] == ["", ""]
+    assert [candidate["occurrences"] for candidate in candidates] == [1, 1]
+    ledger.conn.close()
+
+
+def test_the_count_describes_the_page_the_agent_was_given(
+    git_free_tmp: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Scoped to the response, not to the ledger. A ledger-wide count would tell
+    an Agent that four lines are the same merchant while handing it two, and an
+    Agent that proposes for the other two has proposed about money it never saw.
+    """
+    ledger = _ledger_with(
+        git_free_tmp,
+        [
+            Line(-1_100, "COFFEE BAR 4471 05/06", date="2025-05-06"),
+            Line(-1_200, "COFFEE BAR 9930 05/07", date="2025-05-07"),
+            Line(-1_300, "COFFEE BAR 1122 05/08", date="2025-05-08"),
+        ],
+    )
+    code, out, _ = _call(
+        ledger, ["candidates", "--limit", "2"], capsys=capsys, monkeypatch=monkeypatch
+    )
+    assert code == 0
+    payload = _one_json(out)
+
+    assert (payload["matched"], payload["returned"], payload["has_more"]) == (3, 2, True)
+    assert [candidate["occurrences"] for candidate in payload["candidates"]] == [2, 2]
+    ledger.conn.close()
 
 
 def test_bad_ledger_refuses_candidates_without_echoing_private_descriptors(

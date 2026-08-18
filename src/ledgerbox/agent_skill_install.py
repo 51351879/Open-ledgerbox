@@ -182,12 +182,100 @@ _BEFORE_ONE_COMMAND_SETUP: dict[AgentClient, dict[str, str]] = {
     },
 }
 
+# The bundle shipped before `descriptor_template` and `occurrences` were added
+# to the candidate wire on 2026-08-18. The contract and the grouping reference
+# both had to say what the two fields are and, more importantly, what they are
+# not; classification semantics did not move, so the knowledge version is
+# unchanged and releases are told apart here by fingerprint, as designed.
+_BEFORE_CANDIDATE_TEMPLATE_FIELDS: dict[AgentClient, dict[str, str]] = {
+    "codex": {
+        "SKILL.md": "e07e069879343f672d7b1ffeca140f14264f3e1cfb987ae7e3ec080b5cc07b4f",
+        "agents/openai.yaml": (
+            "1cb29aeb8b34557a694b1854621b314a82bd8f939b46ee3f8c86686ff79b5f2b"
+        ),
+        "references/agent-contract.md": (
+            "d3b79ad98fdf093cb87b0202250beec1686031266a3ad3a1d04bcba642fd8dfa"
+        ),
+        "references/agent-setup.md": (
+            "a9e6afcb4915efc8c0cf721912ecd53464bea207b7274f10ebf533d0163c9480"
+        ),
+        "references/ambiguous-cases.md": (
+            "f92ea8a992923af9ac9d27824db290cac40d35c1fb4f66c64ae27c59881c44fa"
+        ),
+        "references/category-semantics.md": (
+            "4a2bc9b9605939ba7ba7a84d7cd9b32cb4359eeeaf08fc85cb7fcdc1869a2704"
+        ),
+        "references/grouping-and-abstention.md": (
+            "0fe6e01f8828b9eeccd78ab72af6f0722dc8bfba1302b1aba5a7c359eb775b96"
+        ),
+        "references/privacy-and-output.md": (
+            "c671130e7bf76ab83cee43731ed1ecf943ef48404d1ff52b1ae546dba0ebea49"
+        ),
+        "references/transfer-boundaries.md": (
+            "592b09b613ee4647fff195fb4680d6ea58df51e36134546e1847d356c2b75f4c"
+        ),
+        "references/workflow.md": (
+            "fb3d6ef7761edd2ab504cf9547b5c85c262b18443c7dfb9dd241725c14b0c36a"
+        ),
+    },
+    "claude-code": {
+        "SKILL.md": "7ffd854a8066a619ad938f3dfd5a50fd38f4651a662c21dfcb305e7c7c576f27",
+        "references/agent-contract.md": (
+            "d3b79ad98fdf093cb87b0202250beec1686031266a3ad3a1d04bcba642fd8dfa"
+        ),
+        "references/agent-setup.md": (
+            "a9e6afcb4915efc8c0cf721912ecd53464bea207b7274f10ebf533d0163c9480"
+        ),
+        "references/ambiguous-cases.md": (
+            "f92ea8a992923af9ac9d27824db290cac40d35c1fb4f66c64ae27c59881c44fa"
+        ),
+        "references/category-semantics.md": (
+            "4a2bc9b9605939ba7ba7a84d7cd9b32cb4359eeeaf08fc85cb7fcdc1869a2704"
+        ),
+        "references/grouping-and-abstention.md": (
+            "0fe6e01f8828b9eeccd78ab72af6f0722dc8bfba1302b1aba5a7c359eb775b96"
+        ),
+        "references/privacy-and-output.md": (
+            "c671130e7bf76ab83cee43731ed1ecf943ef48404d1ff52b1ae546dba0ebea49"
+        ),
+        "references/transfer-boundaries.md": (
+            "592b09b613ee4647fff195fb4680d6ea58df51e36134546e1847d356c2b75f4c"
+        ),
+        "references/workflow.md": (
+            "fb3d6ef7761edd2ab504cf9547b5c85c262b18443c7dfb9dd241725c14b0c36a"
+        ),
+    },
+}
+
+# The bundle in force through 2026-08-17, before `docs/AGENT_SETUP.md` gained a
+# paragraph about the checked-in translation Skill.
+#
+# **That paragraph shipped without this entry**, which is the failure this
+# catalogue exists to prevent and which the comment above `_BEFORE_PASTE_SAFE_SETUP`
+# already records happening once. The setup guide is packaged into the Skill as
+# `references/agent-setup.md`, so editing a documentation file two directories
+# away silently changed every user's official fingerprint and would have read a
+# real untouched install as custom -- blocking the very upgrade path built for
+# it. The commit after it is the one that noticed. Editing any packaged file is
+# a bundle change, whatever the file looks like.
+_BEFORE_TRANSLATE_SKILL_NOTE: dict[AgentClient, dict[str, str]] = {
+    client: {
+        **_BEFORE_CANDIDATE_TEMPLATE_FIELDS[client],
+        "references/agent-setup.md": (
+            "08d5b6b74925f91d52ef8305ff02c7b68565bcc5d60e4b44cf4faba3b29fa8f1"
+        ),
+    }
+    for client in ("codex", "claude-code")
+}
+
 PREVIOUS_OFFICIAL_BUNDLES: dict[AgentClient, dict[str, tuple[dict[str, str], ...]]] = {
     "codex": {
         OFFICIAL_SKILL_VERSION: (
             _BEFORE_ONE_COMMAND_SETUP["codex"],
             _BEFORE_ABSTENTION_PROTOCOL["codex"],
             _BEFORE_PASTE_SAFE_SETUP["codex"],
+            _BEFORE_TRANSLATE_SKILL_NOTE["codex"],
+            _BEFORE_CANDIDATE_TEMPLATE_FIELDS["codex"],
         ),
     },
     "claude-code": {
@@ -195,6 +283,8 @@ PREVIOUS_OFFICIAL_BUNDLES: dict[AgentClient, dict[str, tuple[dict[str, str], ...
             _BEFORE_ONE_COMMAND_SETUP["claude-code"],
             _BEFORE_ABSTENTION_PROTOCOL["claude-code"],
             _BEFORE_PASTE_SAFE_SETUP["claude-code"],
+            _BEFORE_TRANSLATE_SKILL_NOTE["claude-code"],
+            _BEFORE_CANDIDATE_TEMPLATE_FIELDS["claude-code"],
         ),
     },
 }
