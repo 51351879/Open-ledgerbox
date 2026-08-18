@@ -892,3 +892,101 @@ def test_the_real_fixture_directory_is_referenced_only_through_the_environment()
     assert offenders == [], (
         f"the real statement directory must come from LEDGERBOX_REAL_FIXTURES only: {offenders}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Links that point at nothing
+#
+# Five process documents -- a session handoff, a session prompt and three
+# planning documents -- were maintainer working notes rather than anything a
+# stranger reading a public repository could use, and they now live in an
+# untracked directory outside the tree. Removing them left fifteen markdown
+# links aimed at files that are no longer there.
+#
+# A dead link is the documentation form of the defect this whole project is
+# about: a claim published without checking whether the thing it points at is
+# real. So the guard is not "these five files are gone"; it is "every relative
+# link in every tracked markdown file resolves", which the *next* document to
+# leave the tree cannot slip past either.
+# ---------------------------------------------------------------------------
+
+#: ``[text](target)``, allowing the optional ``"title"`` markdown permits after
+#: the target. Angle-bracket autolinks and reference-style definitions are not
+#: matched: neither form occurs in this repository, and a pattern advertised to
+#: catch a shape it has never seen is the kind of sentence `docs/STATUS.md`
+#: §5.43 is about.
+_MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(\s*([^)\s]+?)(?:\s+\"[^\"]*\")?\s*\)")
+
+
+def _relative_link_targets(text: str) -> list[str]:
+    """Every link target in ``text`` that names a path inside this repository.
+
+    Absolute URLs, ``mailto:`` and same-document anchors belong to somebody
+    else; this check owns the tree and nothing beyond it. A fragment on a
+    repository path (``FILE.md#5b``) is trimmed, because the file is what has
+    to exist -- heading anchors move, and a check that fails when a section is
+    renamed would be switched off within a week.
+    """
+    targets: list[str] = []
+    for match in _MARKDOWN_LINK.finditer(text):
+        target = match.group(1)
+        if target.startswith(("http://", "https://", "mailto:", "#")):
+            continue
+        path = target.split("#", 1)[0]
+        if path:
+            targets.append(path)
+    return targets
+
+
+def _dangling_links(root: Path, relatives: list[str]) -> list[str]:
+    """``file -> target`` for every relative markdown link that resolves to nothing."""
+    dangling: list[str] = []
+    for relative in relatives:
+        if not relative.endswith(".md"):
+            continue
+        source = root / relative
+        if not source.is_file():
+            continue
+        text = source.read_text(encoding="utf-8", errors="replace")
+        for target in _relative_link_targets(text):
+            if not (source.parent / target).exists():
+                dangling.append(f"{relative} -> {target}")
+    return dangling
+
+
+def test_every_relative_link_in_tracked_markdown_resolves() -> None:
+    """No tracked document may point at a path that is not in the tree."""
+    dangling = _dangling_links(REPO_ROOT, tracked_files())
+    assert dangling == [], (
+        f"{len(dangling)} markdown link(s) point at nothing. Either the target "
+        f"belongs in the repository or the reference should stop pretending it "
+        f"is one: {dangling}"
+    )
+
+
+def test_the_link_scan_reads_targets_and_leaves_the_rest_alone() -> None:
+    """The check's own counterexamples: discipline rule 7 applies to guards too."""
+    assert _relative_link_targets("[x](docs/X.md)") == ["docs/X.md"]
+    assert _relative_link_targets('[x](docs/X.md "title")') == ["docs/X.md"]
+    assert _relative_link_targets("[x](docs/X.md#5bd)") == ["docs/X.md"]
+    assert _relative_link_targets("[`X.md`](X.md)") == ["X.md"]
+    assert _relative_link_targets("[x](https://example.invalid/y)") == []
+    assert _relative_link_targets("[x](mailto:someone@example.invalid)") == []
+    assert _relative_link_targets("[x](#a-heading)") == []
+    assert _relative_link_targets("a bare mention of `docs/X.md` is not a link") == []
+
+
+def test_the_link_scan_catches_a_target_that_left_the_tree(tmp_path: Path) -> None:
+    """The red half. Written against a tree built here rather than against the
+    real one, so it keeps failing for its own reason after the repository is
+    fixed -- the mistake `docs/STATUS.md` §5.29 records is a check that stops
+    being able to fail.
+    """
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "KEPT.md").write_text("still here\n", encoding="utf-8")
+    (tmp_path / "README.md").write_text(
+        "[kept](docs/KEPT.md) and [moved](docs/MOVED.md)\n", encoding="utf-8"
+    )
+    assert _dangling_links(tmp_path, ["README.md", "docs/KEPT.md"]) == [
+        "README.md -> docs/MOVED.md"
+    ]

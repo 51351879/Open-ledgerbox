@@ -15,7 +15,7 @@
 > `automatic`，其余情况 fail closed 到 `review_first`。A7 将在用户明确连接并启用本地 Agent
 > 后默认自动应用其提交的 ordinary 与 transfer proposal，同时保留诚实 Agent 来源、遗漏可见和整轮撤回。
 > 完整范围、遗留项排序、schema/API/MCP/Skill 设计、验收与发布门槛见
-> **[`AGENT_CLASSIFICATION_PLAN.md`](AGENT_CLASSIFICATION_PLAN.md)**。
+> **`AGENT_CLASSIFICATION_PLAN.md`**。
 > 隔离重建 13 张账单后的计数也已完成：285 笔未认领收敛成 260 个精确规范化串，
 > 精确串记忆只少 25 次决定；Zelle 56/56、Venmo 5/5 都是不同串，所以首要解是分组提案，
 > 不是精确串记忆。
@@ -26,13 +26,21 @@
 > 纠错并新增 `cash-deposit`；最后一项人工确认完成后，当前有效未分类与最新 triage pending 均为 0。
 > C4 自动化比较和 C5 人工语义/视觉复核已完成；A7 已正式立项。
 > C4 的历史执行/验收文档是 [`C4_FROZEN_BASELINE_PLAN.md`](C4_FROZEN_BASELINE_PLAN.md)。当前压缩
-> 交接见 [`A7_NEXT_SESSION_HANDOFF.md`](A7_NEXT_SESSION_HANDOFF.md)，可直接复制的新 Session
-> 启动词见 [`NEXT_SESSION_PROMPT.md`](NEXT_SESSION_PROMPT.md)。
+> 交接见 `A7_NEXT_SESSION_HANDOFF.md`，可直接复制的新 Session
+> 启动词见 `NEXT_SESSION_PROMPT.md`。
 > 当前产品化与开源发布顺序以
-> [`AGENT_NATIVE_OPEN_SOURCE_PLAN.md`](AGENT_NATIVE_OPEN_SOURCE_PLAN.md) 为准；它不撤销 C4，
+> `AGENT_NATIVE_OPEN_SOURCE_PLAN.md` 为准；它不撤销 C4，
 > 而是要求 C4 使用冻结后的官方模块化 Skill v1，避免评估即将被替换的薄 Skill。
 > v1 仍永久只做 proposal review；v2 Core 原子自动应用与 Agent provenance/撤回边界已完成。
-> A7 顺序与 DoD 见 [`A7_AUTOMATIC_CLASSIFICATION_PLAN.md`](A7_AUTOMATIC_CLASSIFICATION_PLAN.md)。
+> A7 顺序与 DoD 见 `A7_AUTOMATIC_CLASSIFICATION_PLAN.md`。
+>
+> **五份过程文档不在这个仓库里。** `A7_NEXT_SESSION_HANDOFF.md`、`NEXT_SESSION_PROMPT.md`、
+> `AGENT_NATIVE_OPEN_SOURCE_PLAN.md`、`AGENT_CLASSIFICATION_PLAN.md` 与
+> `A7_AUTOMATIC_CLASSIFICATION_PLAN.md` 是维护者的 session 交接与内部排期笔记：它们写给
+> 下一个 session，不写给读者，公开出来只会让人以为那是产品文档。它们已移出树，放在仓库外一个
+> 未跟踪的本地目录（例如与仓库同级的 `ledgerbox-notes/`）里继续维护。**本文以下所有对它们的
+> 引用都是不带链接的文件名**——链接指向的东西必须存在，这条规则由
+> `tests/test_repo_hygiene.py` 的 markdown 链接闸门执行，它在这次搬迁时先红了 14 条才转绿。
 >
 > **读之前先知道四件事**：
 >
@@ -2275,7 +2283,7 @@ Code、愿意把它与本地账本组合使用的开发者型用户。产品因�
 当前两个 `ledgerbox` Skill 只有七条调用与安全规则，尚未承载 A6–C3 形成的分类语义、transfer 边界、
 分组/省略策略和通用反例；当前 wheel 也只包含 `src/ledgerbox`，仓库根目录 `.agents/` / `.claude/`
 不会自动随 PyPI 安装。新权威计划
-[`AGENT_NATIVE_OPEN_SOURCE_PLAN.md`](AGENT_NATIVE_OPEN_SOURCE_PLAN.md) 因此把下一项冻结为 S1：建立
+`AGENT_NATIVE_OPEN_SOURCE_PLAN.md` 因此把下一项冻结为 S1：建立
 单一知识源的官方模块化 Skill v1，再以纯合成 eval 固定行为，之后用同一 Skill 版本执行 C4。
 
 C4.0 只读预检与 C4.1 Base/Truth/two-clone 设计保持有效；尚未创建真实 clone 或运行模型。开源发布
@@ -2420,7 +2428,7 @@ A7.0 已把面板说明和 completed-run 空状态改成 submitted/pending 与 o
 
 当前完整回归为 **909 passed / 100 skipped**；Node **44 / 44**，ruff、mypy strict、repo-data 与 diff
 check 全绿。A7 的当前权威任务书是
-[`A7_AUTOMATIC_CLASSIFICATION_PLAN.md`](A7_AUTOMATIC_CLASSIFICATION_PLAN.md)。下一项 A7.1 先做
+`A7_AUTOMATIC_CLASSIFICATION_PLAN.md`。下一项 A7.1 先做
 forward-only schema 11、诚实 Agent provenance 与旧数据 human 默认；这些边界成立前不做自动写入。
 
 ---
@@ -2449,7 +2457,7 @@ override 与 completed outcome 同事务成功或同事务零写，ordinary 与 
 
 ## 5al. A7 交接收敛：81.9% 是 omission 金额口径，A7.2 仍是下一项（2026-08-10）
 
-新增 [`A7_NEXT_SESSION_HANDOFF.md`](A7_NEXT_SESSION_HANDOFF.md)，把 C5 后的产品决定、A7.0-A7.1
+新增 `A7_NEXT_SESSION_HANDOFF.md`，把 C5 后的产品决定、A7.0-A7.1
 实现事实、最近遗漏问题、开源缺口与 A7.2 DoD 压缩成单一交接入口。最近一轮的 `0 pending` 与
 `81.9%` 并不矛盾：前者只统计已提交 proposal，后者是未获 category 的净支出金额占比；遗漏支出
 占支出行 27.5%，但少数大额资金流放大金额口径。该轮已经提交并接受 transfer proposal，因此取消
@@ -2913,6 +2921,30 @@ Chromium 系浏览器 + Narrator（Agent 流）为受支持且逐门验证过的
 
 ---
 
+## 5bj. 过程文档移出仓库，链接闸门先红后绿（2026-08-17）
+
+`docs/` 里有五份文档从来不是写给读者的：`A7_NEXT_SESSION_HANDOFF.md`（session 交接）、
+`NEXT_SESSION_PROMPT.md`（可复制的启动词）、`AGENT_NATIVE_OPEN_SOURCE_PLAN.md`、
+`AGENT_CLASSIFICATION_PLAN.md`、`A7_AUTOMATIC_CLASSIFICATION_PLAN.md`（三份内部排期）。
+合计 2,246 行、约 7.9 万字符；一个陌生人点进 `docs/` 会把它们当成产品文档，
+读到的却是"下一 session 先读什么"。它们已移到仓库外一个未跟踪的本地目录继续维护，
+`docs/` 从 21 份减到 16 份。
+
+`EXECUTION_PLAN.md` **没有**跟着走：`tests/test_db.py` 把它 §3.2 的 DDL 块与真实建库结果
+逐列比较，那份文档是一个被机器读的契约，不是笔记。
+
+搬迁本身会留下 14 条指向不存在文件的 markdown 链接，所以先写闸门：
+`test_every_relative_link_in_tracked_markdown_resolves` 扫描每个被跟踪的 `.md`，
+断言每条仓库内相对链接都能解析（锚点被截掉——文件必须存在，标题会改名，一条因为改标题而红的
+检查一周内就会被关掉）。顺序是可证的：闸门在干净树上先绿，`git rm` 之后**红 14 条**并逐条报出
+`文件 -> 目标`，把引用改成不带链接的文件名后再绿。闸门自己也有正反例：链接提取函数对标题、
+锚点、绝对 URL、`mailto:`、反引号裸提及各有断言，另有一个在 `tmp_path` 上现搭的树证明
+"目标离开树"确实会被抓到——那条红的理由与仓库现状无关，所以修好仓库不会让它失去失败能力。
+
+死链是这个项目反对的那类缺陷的文档版本：一句没有核对指向物是否存在就发布的断言。
+
+---
+
 ## 6. 未完成
 
 ### P2 —— 分析与前端
@@ -2927,7 +2959,7 @@ job 四路计数与遗漏 UI 均已完成。A7.5 的 Codex Windows 真实 automa
 整轮撤回也已验收；package-content、用户级 Classification Skill 安装/doctor/安全升级、Windows
 全新安装、Narrator smoke，以及侧栏个人 Skill 状态/复制设置流程的诚实性整合已完成。三平台发布 smoke
 与其余 release 门仍未完成，
-顺序与 DoD 见 [`A7_AUTOMATIC_CLASSIFICATION_PLAN.md`](A7_AUTOMATIC_CLASSIFICATION_PLAN.md)。
+顺序与 DoD 见 `A7_AUTOMATIC_CLASSIFICATION_PLAN.md`。
 **`node:test` 那条路已经建好了**（§5.95、§5l、§5n、§5q、§5v）：`tests/js/` 下的用例覆盖
 `tests/test_web_behaviour.py` 把它接进 `pytest`，覆盖 `date-range.js`、`category-claim.js`、
 `connection.js`、批量全选失败路径、proposal 与 triage 分组/失败/空状态。其余交互仍主要依赖真实浏览器验收。

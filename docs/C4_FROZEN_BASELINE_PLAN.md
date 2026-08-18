@@ -9,7 +9,8 @@
 > 前置状态：G0–A6、A6.5 C0–C3 与真实人工审核已完成；当前有效未分类为 0；A7 暂停
 >
 > 2026-08-09 后续决定：C4.0 预检与 C4.1 基线设计保持有效；C4.3 模型运行必须使用
-> [`AGENT_NATIVE_OPEN_SOURCE_PLAN.md`](AGENT_NATIVE_OPEN_SOURCE_PLAN.md) 定义并经合成 eval 冻结的
+> `AGENT_NATIVE_OPEN_SOURCE_PLAN.md`（与下文其余计划文档同为维护者本地笔记，不在仓库内，
+> 见 [`STATUS.md`](STATUS.md) 文件头）定义并经合成 eval 冻结的
 > 官方模块化 Classification Skill v1，不复跑已经替换的七条薄 Skill。
 
 ---
@@ -239,9 +240,9 @@ triage 是剩余覆盖审计，不会给普通类别建议。
 ## 10. 与其他文档的关系
 
 - 当前事实与完成证据：[`STATUS.md`](STATUS.md)
-- BYOA 总路线、A7 边界与 C5 选项：[`AGENT_CLASSIFICATION_PLAN.md`](AGENT_CLASSIFICATION_PLAN.md)
+- BYOA 总路线、A7 边界与 C5 选项：`AGENT_CLASSIFICATION_PLAN.md`
 - proposal 五工具契约：[`AGENT_CONTRACT.md`](AGENT_CONTRACT.md)
 - 本地 Codex / Claude 安装连接：[`AGENT_SETUP.md`](AGENT_SETUP.md)
 - triage 为什么不是 category proposal：[`COVERAGE_TRIAGE_CONTRACT.md`](COVERAGE_TRIAGE_CONTRACT.md)
 - 架构与重建不变式：[`ARCHITECTURE.md`](ARCHITECTURE.md)
-- 下一 Session 可直接复制的启动词：[`NEXT_SESSION_PROMPT.md`](NEXT_SESSION_PROMPT.md)
+- 下一 Session 可直接复制的启动词：`NEXT_SESSION_PROMPT.md`

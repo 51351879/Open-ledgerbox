@@ -1,7 +1,8 @@
 # ledgerbox — 执行方案
 
 > 2026-08-07 补充：本文件保留立项方案，不更新日常进度。P2 之后新增的 BYOA 分类方向、
-> 遗留项重排与具体执行门槛见 [`AGENT_CLASSIFICATION_PLAN.md`](AGENT_CLASSIFICATION_PLAN.md)；
+> 遗留项重排与具体执行门槛见 `AGENT_CLASSIFICATION_PLAN.md`（维护者本地笔记，不在仓库内，
+> 见 [`STATUS.md`](STATUS.md) 文件头）；
 > 当前事实仍以 [`STATUS.md`](STATUS.md) 为准。
 
 > 本地优先的个人财务账本。把银行对账单丢进去，得到一个**经过对账验证**的长期账本。

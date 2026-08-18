@@ -88,6 +88,7 @@ frozen-reference comparison. The inspected clone may change during post-C4 produ
 rewrite the already committed C4 score.
 
 The implementation contract, omission behavior, provenance requirements and staged DoD are now in
-[`A7_AUTOMATIC_CLASSIFICATION_PLAN.md`](A7_AUTOMATIC_CLASSIFICATION_PLAN.md). Existing proposal schema
+`A7_AUTOMATIC_CLASSIFICATION_PLAN.md` -- a maintainer's local planning note kept outside
+this repository, see the head of [`STATUS.md`](STATUS.md). Existing proposal schema
 v1 remains review-only until the versioned A7 path is implemented; the decision does not silently alter
 the meaning of the C4 contract.
