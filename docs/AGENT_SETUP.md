@@ -50,6 +50,14 @@ checked-in `ledgerbox-setup` Skill, which asks where the ledger should live and 
 runs this command. Sections 1-3 below remain the manual path and the reference for
 what setup actually does.
 
+A third checked-in Skill, `ledgerbox-translate`, is for a different job: asking either
+client to add a language -- a UI locale dictionary under
+`src/ledgerbox/web/js/locales/` and a `README.<lang>.md` -- with the terms that must
+never be translated held fixed and the scope tables' verdicts held to their counts. It
+edits the interface and never touches ledger data. Unlike the other two it is not
+packaged into the wheel, because it writes into a checkout and there is nothing for it
+to write into otherwise.
+
 ## 1. Install the optional local bridge
 
 From the Ledgerbox checkout, use the same Python environment that runs Ledgerbox:

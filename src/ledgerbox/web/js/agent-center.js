@@ -16,17 +16,8 @@ import {
 const WATCH_MS = 4000;
 import { IN_FLIGHT, LABELS, validatedCenter } from './agent-contract.js';
 import { createJobPanel } from './agent-job-panel.js';
-const NAV_ITEMS = [
-  ['ledger', 'Overview', null],
-  ['analytics', 'Charts', null],
-  ['transactions', 'Transactions', 'needs'],
-  ['large-flows', 'Large flows', null],
-  ['agent-proposals', 'Agent proposals', 'proposals'],
-  ['agent-triage', 'Coverage triage', 'triage'],
-  ['statement-history', 'Statements', null],
-  ['advice', 'Planning notes', null],
-  ['review-queue', 'Review queue', 'review'],
-];
+import { t } from './i18n.js';
+import { addDirectory, setBadge } from './sidebar-nav.js';
 
 async function defaultCopyText(text) {
   if (!globalThis.navigator?.clipboard?.writeText) {
@@ -58,33 +49,6 @@ function clientSelect() {
   return select;
 }
 
-function addDirectory(root) {
-  const nav = el('nav', 'sidebar-nav');
-  nav.setAttribute('aria-label', 'On this page');
-  const badges = {};
-  for (const [target, label, badgeName] of NAV_ITEMS) {
-    const link = el('a', 'sidebar-nav__link');
-    link.setAttribute('href', `#${target}`);
-    link.appendChild(el('span', '', label));
-    if (badgeName) {
-      const badge = el('span', 'sidebar-nav__badge', '0');
-      badge.hidden = true;
-      link.appendChild(badge);
-      badges[badgeName] = badge;
-    }
-    nav.appendChild(link);
-  }
-  root.appendChild(nav);
-  return badges;
-}
-
-function setBadge(node, count, label = 'pending') {
-  const value = Math.max(0, Number(count) || 0);
-  node.textContent = String(value);
-  node.hidden = value === 0;
-  node.setAttribute('aria-label', `${value} ${label}`);
-}
-
 export function createAgentSidebar({ root, services, onNeedsClassification } = {}) {
   const api = {
     fetchCenter: fetchAgentCenter,
@@ -98,7 +62,10 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
   };
   clear(root);
   const panel = el('div', 'sidebar__panel');
-  panel.appendChild(el('p', 'sidebar__eyebrow', 'This ledger'));
+  // Through `t()` because this render replaces the identical line of markup
+  // in index.html: without it the static sweep translates the eyebrow and
+  // this line puts it straight back into English, in front of the reader.
+  panel.appendChild(el('p', 'sidebar__eyebrow', t('This ledger')));
   const ledgerName = el('strong', 'sidebar__ledger-name', 'Reading…');
   const ledgerPath = el('code', 'sidebar__ledger-path');
   ledgerPath.setAttribute('title', 'The data directory this page and copied commands use');

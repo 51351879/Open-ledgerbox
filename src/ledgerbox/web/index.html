@@ -52,6 +52,17 @@
            so that losing the server is announced, and it fires on transitions
            only so the heartbeat cannot announce "Connected" forever. -->
       <p id="link" class="link link--unknown" aria-live="polite"></p>
+      <!-- The language of the page. Each option names its own language in that
+           language: the one label a reader who cannot read the current page can
+           still recognise. The mechanism, and why a change reloads, is in
+           js/language.js and js/i18n.js. -->
+      <label class="tongue">
+        <span class="visually-hidden">Language</span>
+        <select id="locale" class="tongue__select">
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+        </select>
+      </label>
       <details id="adder" class="adder">
         <summary class="adder__toggle">Add statements</summary>
         <div class="adder__panel">

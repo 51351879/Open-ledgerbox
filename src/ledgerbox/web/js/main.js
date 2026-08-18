@@ -45,6 +45,7 @@ import { createReviewQueue } from './review.js';
 import { createStatementList } from './statements.js';
 import { createTransactionsPanel } from './transactions.js';
 import { createUploader } from './upload.js';
+import { applyStoredLanguage, wireLanguageControl } from './language.js';
 
 function node(id) {
   return document.getElementById(id);
@@ -59,6 +60,14 @@ function node(id) {
 // Everything the page says about /api/health renders in health-strip.js.
 
 function boot() {
+  // Language first, before a single panel renders. The static markup is
+  // English and the dictionary rewrites it in place; doing this after the
+  // panels would translate the page in front of the reader. With nothing
+  // stored this is a no-op and every string below stays exactly as written,
+  // which is why the existing tests still pin English sentences.
+  applyStoredLanguage();
+  wireLanguageControl(node('locale'));
+
   const ledgerNode = node('ledger');
   const statusNode = node('status');
   const diagNode = node('diagnostics-body');

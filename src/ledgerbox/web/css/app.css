@@ -63,6 +63,23 @@
 .tagline { margin-top: 4px; max-width: 34rem; color: var(--ink-2); font-size: 13px; }
 .masthead__controls { display: flex; align-items: center; gap: 12px; }
 
+/* --- the language of the page --------------------------------------------
+   A native `<select>`, unstyled beyond the operator's own control chrome. Its
+   options name their languages in those languages, so the one label a reader
+   who cannot read the current page can still recognise is the one that matters.
+   The `<label>` text itself is visually hidden: the control sits beside a
+   status light in a bar with no room for a word, and a screen reader still
+   gets a name. */
+.tongue { display: inline-flex; align-items: center; }
+.tongue__select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--sheet);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+}
+
 /* --- add statements: a small button that opens the real drop zone ---------- */
 
 /* A `<details>`, so the toggle is a control the browser already knows how to

@@ -57,6 +57,11 @@ scope section for exactly what "supported" means here.
   project's honesty depends on. Category IDs, amounts, commands and wire
   values are not translated. Everything under `docs/` is English only, and
   the translated page says so rather than implying otherwise.
+- The interface has a language control. English is the default and the page
+  is unchanged without a choice; the Simplified Chinese dictionary covers the
+  page's own chrome, and anything it does not cover stays in English rather
+  than going blank. A checked-in `ledgerbox-translate` Skill walks the user's
+  own Codex or Claude Code through adding another language.
 
 ### Known boundaries
 
