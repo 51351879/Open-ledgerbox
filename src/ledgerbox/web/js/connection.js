@@ -40,11 +40,16 @@
 // the only two files every other module depends on is not a thing to tolerate
 // for the sake of putting one predicate in the more comfortable place.
 
+import { localized } from './i18n.js';
+
 /** How often to re-ask while things are working, and while they are not. */
 const HEARTBEAT_MS = 15000;
 const RETRY_MS = 3000;
 
-export const CONNECTION_COPY = {
+// Wrapped, so the six modules that read `.panel` and the strip that reads the
+// rest need no change at all: each sentence is looked up as it is read, and
+// stays exactly itself while the page is in English.
+export const CONNECTION_COPY = localized({
   up: 'Ledgerbox online',
   down: 'Ledgerbox not answering',
   unknown: 'Checking Ledgerbox…',
@@ -57,7 +62,7 @@ export const CONNECTION_COPY = {
   // one place up the page.
   panel: 'Waiting for ledgerbox.',
   retry: 'Try again now',
-};
+});
 
 const listeners = new Set();
 //: `null` until the first request settles: "we have not asked yet" is not the

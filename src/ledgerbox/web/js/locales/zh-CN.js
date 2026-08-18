@@ -83,6 +83,55 @@ export const zhCN = {
   'What was spent, by category': '按类别看支出去向',
   'Share of spending by category.': '各类别在支出中的占比。',
 
+  // The connection light and the sentence under it. One place on the page
+  // explains a server that is not answering; six panels only say they are
+  // waiting, so `Waiting for ledgerbox.` is short on purpose here too.
+  'Ledgerbox online': 'Ledgerbox 在线',
+  'Ledgerbox not answering': 'Ledgerbox 没有响应',
+  'Checking Ledgerbox…': '正在检查 Ledgerbox…',
+  'ledgerbox is running on this machine and answering.':
+    'ledgerbox 正在这台机器上运行并响应。',
+  ['The ledgerbox process on this machine is not answering. Start it again — the window that '
+    + 'opened this page has the command — and this will go green by itself. Nothing has been '
+    + 'lost: the ledger is a file on your disk.']:
+    '这台机器上的 ledgerbox 进程没有响应。重新启动它——打开本页的那个窗口里有命令——'
+    + '之后这里会自己变绿。什么都没丢：账本是你磁盘上的一个文件。',
+  'Waiting for ledgerbox.': '正在等待 ledgerbox。',
+  'Try again now': '立即重试',
+
+  // The status strip: only ever says what is wrong.
+  'Queue clear': '队列已清空',
+  '{count} statement(s) refused and unbooked': '{count} 份账单被拒收，未入账',
+  '{count} warning(s) to look at': '{count} 条警告待查看',
+  'Database integrity check FAILED': '数据库完整性检查未通过',
+  'Schema {version} of {latest}: migrations pending':
+    'Schema {version} / {latest}：仍有迁移未执行',
+  'No ledger file yet. It is created the first time a statement is booked.':
+    '还没有账本文件。第一次有账单入账时才会创建它。',
+  'Data directory': '数据目录',
+
+  // Large flows: the board for money no person has confirmed. Category IDs and
+  // amounts are substituted into these sentences, never looked up in them.
+  ['Lines of at least $1,000 whose category no person has directly confirmed. Confirm keeps '
+    + 'the shown category as your own decision; anything wrong, change it in Transactions '
+    + 'instead.']:
+    '金额不低于 $1,000、且没有任何人直接确认过其类别的行。确认会把当前显示的类别定为你自己的'
+    + '决定；有问题就到 Transactions 里改，而不是在这里确认。',
+  'set by Agent': '由 Agent 决定',
+  'set by your earlier answer': '由你此前的回答决定',
+  'set by a shipped rule': '由出厂规则决定',
+  'nobody claimed this': '没有任何规则认领',
+  Confirm: '确认',
+  'Confirmed {category} for the {amount} line.': '已把 {amount} 那一行确认为 {category}。',
+  'Confirm {category} for {amount} on {date}': '把 {date} 的 {amount} 确认为 {category}',
+  'Could not confirm the category.': '无法确认该类别。',
+  'Classify in Transactions': '到 Transactions 分类',
+  '{count} large line(s) awaiting one look': '{count} 笔大额待看一眼',
+  '(more beyond the first 200)': '（前 200 条之外还有）',
+  'Every large line has a person-confirmed answer.': '每一笔大额都已有人确认过答案。',
+  'Waiting for the local Ledgerbox service.': '正在等待本地 Ledgerbox 服务。',
+  'Could not read large flows.': '无法读取大额流水。',
+
   // The statement list
   'Search these statements': '检索这些账单',
   'month, institution or id': '月份、机构或 id',

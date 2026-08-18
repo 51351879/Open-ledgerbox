@@ -132,6 +132,33 @@ export function t(english, values) {
 }
 
 /**
+ * A copy object read through the dictionary at the moment it is read.
+ *
+ * Most modules here keep their prose in one `const COPY = {...}` at the top,
+ * which is already the right shape: the English sentence is the value, and the
+ * value is the key. Wrapping the object translates every one of its sentences
+ * without touching a single reading site -- and there are a lot of reading
+ * sites. `CONNECTION_COPY.panel` alone is read by six modules.
+ *
+ * **Shallow on purpose.** Only string values are looked up; objects, numbers
+ * and functions pass through untouched, so a nested `{ tone, label }` keeps its
+ * `label` in English rather than being half-translated by a rule nobody wrote
+ * down. A map with prose one level down gets `t()` at its reading site instead.
+ *
+ * Reading is live rather than snapshot, so a module imported before the locale
+ * was chosen still speaks it afterwards -- which is the ordering the page has,
+ * since `main.js` picks the language after every module is imported.
+ */
+export function localized(copy) {
+  return new Proxy(copy, {
+    get(target, key) {
+      const value = Reflect.get(target, key);
+      return typeof value === 'string' ? t(value) : value;
+    },
+  });
+}
+
+/**
  * Add or extend a dictionary. Merging rather than replacing: a language may
  * arrive in more than one file, and the second must not delete the first.
  */

@@ -18,6 +18,7 @@ import {
   reviewTriageRun,
   withdrawTriageRun,
 } from './triage-api.js';
+import { CONNECTION_COPY } from './connection.js';
 import { renderTriageGroups, renderTriageHistory } from './triage-groups.js';
 
 const defaultServices = {
@@ -315,7 +316,11 @@ export function createTriagePanel({ root, onChange = () => {}, services = defaul
       clear(body);
       body.className = 'triage-body empty';
       if (isOffline(error)) {
-        body.textContent = 'Waiting for the local service.';
+        // One sentence for one state, shared with the four panels that already
+        // read it. This said `Waiting for the local service.` while they said
+        // `Waiting for ledgerbox.` -- two wordings for the server not
+        // answering, on one page, which translating the page made visible.
+        body.textContent = CONNECTION_COPY.panel;
         showNotice('');
         announce('Remaining coverage triage is waiting.');
       } else {

@@ -3,6 +3,8 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 
+import { CONNECTION_COPY } from '../../src/ledgerbox/web/js/connection.js';
+
 import { ApiError } from '../../src/ledgerbox/web/js/api.js';
 import { createProposalPanel } from '../../src/ledgerbox/web/js/agent-proposals.js';
 
@@ -66,7 +68,10 @@ test('empty and offline proposal states stay bounded and keep manual classificat
       throw new ApiError(0, 'No answer from ledgerbox.', null);
     };
     await panel.refresh();
-    assert.equal(panel.nodes.body.textContent, 'Waiting for the local service.');
+    // One sentence for one state: this used to be a second wording of
+    // `Waiting for ledgerbox.`, which four other panels were already using.
+    assert.equal(panel.nodes.body.textContent, CONNECTION_COPY.panel);
+    assert.equal(CONNECTION_COPY.panel, 'Waiting for ledgerbox.');
     assert.equal(panel.nodes.notice.hidden, true, 'the header connection light owns the reason');
     assert.equal(panel.nodes.status.textContent, 'Agent proposal review is waiting.');
   } finally {

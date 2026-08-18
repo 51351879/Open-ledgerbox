@@ -3147,6 +3147,39 @@ Python 1130 passed / 100 skipped、Node 95/95、ruff、mypy strict、repo-data�
 
 ---
 
+## 5bp. 中文第三阶段第一批：页面对自己状态的那几句话（2026-08-18）
+
+§5bn 只翻了静态骨架；面板文案由 JS 渲染，仍是英文。本轮先接三处——**服务在不在、账本稳不稳、
+哪笔钱还等着人看**：连接灯（`connection.js`）、状态条（`health-strip.js`）、大额确认板
+（`large-flows.js`）。
+
+杠杆点是 `localized()`：这些模块本来就把文案集中在一个 `const COPY = {...}` 里，值就是英文原句，
+也就是键。包一层 Proxy，**读取时才查字典**，于是所有调用点一个字都不用改——
+`CONNECTION_COPY.panel` 有六个模块在读。它**只查字符串值**，嵌套对象、数字、函数原样穿过：
+`{ tone, label }` 这种半翻译比不翻更糟，而那种表要在读取点单独写 `t()`。读取是活的不是快照，
+因为 `main.js` 在所有模块 import 之后才选语言。
+
+带 `{}` 的句子按占位符处理，**类别 ID 与金额是代入不是查表**：
+`t('Confirmed {category} for the {amount} line.', {category, amount})`。
+大额板新增两条反例把这条钉死：中文渲染下 `housing` 仍是 `housing`；
+以及一份只翻了一个词的残缺字典下，其余句子回落英文而不是空白，并进 `missingKeys()`。
+
+两处边界是"页面真跑一次"才看见的：`t('Data directory ')` 与 `t(' (more beyond the first 200)')`
+的首尾空格会被键的规范化吃掉，把标签和路径粘在一起——分隔符现在留在句子外面。
+
+**翻译顺带做了一次审计。** 关掉服务后页面同时出现两句话：四个面板说
+`正在等待 ledgerbox。`，另两个（`agent-proposals.js`、`triage.js`）说英文的
+`Waiting for the local service.`——**同一个状态在同一页上有两种说法**，而
+`health-strip.js` 的文档正写着"六个面板只说自己在等，理由留在上面那一处"。
+一半被翻译、一半没有，这个分歧才显形。两处现在都读 `CONNECTION_COPY.panel`，
+两个既有断言随之改成断言"同一句"。翻译一张页面是一次关于它到底说了什么的审计。
+
+Node 从 95 涨到 **100**；Python 1130 passed / 100 skipped 不变。剩余未翻的 27 条
+（`missingKeys()` 逐条可读）仍是既定边界：被行内标签切碎的解释性长文、引用英文标签的段落、
+产品名、语言选项本身。下一批的判断依据仍是打开页面读那张表。
+
+---
+
 ## 6. 未完成
 
 ### P2 —— 分析与前端

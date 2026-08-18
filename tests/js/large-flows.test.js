@@ -3,6 +3,12 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 
+import {
+  missingKeys,
+  registerLocale,
+  resetI18n,
+  setLocale,
+} from '../../src/ledgerbox/web/js/i18n.js';
 import { createLargeFlowsPanel } from '../../src/ledgerbox/web/js/large-flows.js';
 
 class FakeElement {
@@ -143,6 +149,68 @@ test('a rejected confirmation stays on the board and says why', async () => {
     assert.equal(confirm.disabled, false, 'the person may try again');
     assert.equal(panel.nodes.list.children.length, 1);
   } finally {
+    restore();
+  }
+});
+
+test('the board speaks the reader`s language and never translates the money', async () => {
+  // The point of the whole dictionary layer, on the panel where getting it
+  // wrong costs the most: a category id is an identifier the ledger stores and
+  // an amount is a figure, so both are substituted into the sentence rather
+  // than looked up in it.
+  const restore = installDocument();
+  resetI18n();
+  registerLocale('zh-CN', {
+    'set by Agent': '由 Agent 决定',
+    'nobody claimed this': '没有任何规则认领',
+    Confirm: '确认',
+    'Classify in Transactions': '到 Transactions 分类',
+    '{count} large line(s) awaiting one look': '{count} 笔大额待看一眼',
+  });
+  setLocale('zh-CN');
+  try {
+    const counts = new FakeElement('p');
+    const panel = createLargeFlowsPanel({ root: new FakeElement('section'), countsNode: counts });
+    panel.services.fetchFlows = async () => flows([AGENT_LINE, UNCLAIMED_LINE]);
+    await panel.refresh();
+
+    const rows = panel.nodes.list.children;
+    const first = texts(rows[0]).join(' ');
+    assert.match(first, /由 Agent 决定/);
+    assert.match(first, /housing/, 'the category id is stored data, not a word');
+    assert.match(texts(rows[1]).join(' '), /没有任何规则认领/);
+    assert.match(texts(rows[1]).join(' '), /到 Transactions 分类/);
+    assert.equal(counts.textContent, '2 笔大额待看一眼');
+  } finally {
+    setLocale('en');
+    resetI18n();
+    restore();
+  }
+});
+
+test('a board with no dictionary behind it is the English board', async () => {
+  // The fallback stated as a property of this panel and not only of the layer:
+  // a half-translated locale leaves every unanswered sentence in English rather
+  // than blank, and the row still says who answered.
+  const restore = installDocument();
+  resetI18n();
+  registerLocale('zh-CN', { Confirm: '确认' });
+  setLocale('zh-CN');
+  try {
+    const panel = createLargeFlowsPanel({
+      root: new FakeElement('section'),
+      countsNode: new FakeElement('p'),
+    });
+    panel.services.fetchFlows = async () => flows([AGENT_LINE]);
+    await panel.refresh();
+
+    const row = texts(panel.nodes.list.children[0]).join(' ');
+    assert.match(row, /set by Agent/);
+    assert.match(row, /确认/);
+    assert.ok(missingKeys('zh-CN').includes('set by Agent'));
+  } finally {
+    setLocale('en');
+    resetI18n();
     restore();
   }
 });

@@ -17,6 +17,7 @@ import {
   reviewProposalRun,
   withdrawProposalRun,
 } from './api.js';
+import { CONNECTION_COPY } from './connection.js';
 import { renderProposalGroups, renderProposalHistory } from './agent-proposal-groups.js';
 
 const defaultServices = {
@@ -277,7 +278,11 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
       clear(body);
       body.className = 'proposal-body empty';
       if (isOffline(error)) {
-        body.textContent = 'Waiting for the local service.';
+        // One sentence for one state, shared with the four panels that already
+        // read it. This said `Waiting for the local service.` while they said
+        // `Waiting for ledgerbox.` -- two wordings for the server not
+        // answering, on one page, which translating the page made visible.
+        body.textContent = CONNECTION_COPY.panel;
         showNotice('');
         announce('Agent proposal review is waiting.');
       } else {

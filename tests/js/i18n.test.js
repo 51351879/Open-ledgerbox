@@ -15,6 +15,7 @@ import {
   applyStaticText,
   availableLocales,
   currentLocale,
+  localized,
   missingKeys,
   registerLocale,
   resetI18n,
@@ -279,4 +280,51 @@ test('an element whose text is not text is left alone', () => {
   assert.equal(code.childNodes[0].nodeValue, 'Add statements', 'a quoted label is a value');
   assert.equal(normal.childNodes[0].nodeValue, '添加账单');
   assert.deepEqual(missingKeys(), [], 'an element we skip is not a gap we report');
+});
+
+// ---------------------------------------------------------------------------
+// Copy objects read through the dictionary
+// ---------------------------------------------------------------------------
+
+test('a wrapped copy object translates every sentence it holds', () => {
+  fresh();
+  const COPY = localized({ up: 'Ledgerbox online', retry: 'Try again now' });
+  assert.equal(COPY.up, 'Ledgerbox online', 'English is unchanged by wrapping');
+
+  registerLocale('zh-CN', { 'Ledgerbox online': 'Ledgerbox 在线' });
+  setLocale('zh-CN');
+  assert.equal(COPY.up, 'Ledgerbox 在线');
+  assert.equal(COPY.retry, 'Try again now', 'an untranslated sentence still falls back');
+  assert.deepEqual(missingKeys(), ['Try again now']);
+});
+
+test('a wrapped copy object is read live, not snapshotted', () => {
+  // main.js picks the language after every module has been imported, so a copy
+  // frozen at import time would be permanently English no matter what the
+  // reader chose.
+  fresh();
+  const COPY = localized({ up: 'Ledgerbox online' });
+  registerLocale('zh-CN', { 'Ledgerbox online': 'Ledgerbox 在线' });
+
+  assert.equal(COPY.up, 'Ledgerbox online');
+  setLocale('zh-CN');
+  assert.equal(COPY.up, 'Ledgerbox 在线');
+  setLocale('en');
+  assert.equal(COPY.up, 'Ledgerbox online');
+});
+
+test('a wrapped copy object leaves everything that is not a sentence alone', () => {
+  // Shallow deliberately: a `{ tone, label }` value must not be half-translated
+  // by a rule nobody wrote down, and a number is not prose.
+  fresh();
+  const nested = { tone: 'ok', label: 'Imported' };
+  const COPY = localized({ nested, threshold: 1000, describe: () => 'Imported' });
+  registerLocale('zh-CN', { Imported: '已导入' });
+  setLocale('zh-CN');
+
+  assert.equal(COPY.nested, nested);
+  assert.equal(COPY.nested.label, 'Imported');
+  assert.equal(COPY.threshold, 1000);
+  assert.equal(COPY.describe(), 'Imported');
+  assert.deepEqual(missingKeys(), [], 'nothing that is not a sentence was even looked up');
 });

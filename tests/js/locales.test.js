@@ -57,7 +57,12 @@ async function interfaceText() {
       .filter((name) => name.endsWith('.js'))
       .map((name) => readFile(new URL(`js/${name}`, WEB), 'utf8')),
   );
-  return normalize([html, ...sources].join('\n'));
+  // Splice adjacent string literals together before searching. A sentence too
+  // long for one line is written as `'first half ' + 'second half'`, in the
+  // source and in the dictionary alike, and a haystack that kept the `' + '`
+  // reports the two longest and most carefully worded sentences on the page as
+  // inventions. Found by adding them.
+  return normalize([html, ...sources].join('\n')).replace(/'\s*\+\s*'/g, '');
 }
 
 test('this build ships at least one language besides English', () => {

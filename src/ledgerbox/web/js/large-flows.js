@@ -15,13 +15,16 @@ import {
   isOffline,
   updateTransactionCategory,
 } from './api.js';
+import { localized, t } from './i18n.js';
 
-const WHO = {
+// Who answered, in the four words the row shows. Wrapped rather than wrapped
+// at each reading site: the values are the whole of this map.
+const WHO = localized({
   agent: 'set by Agent',
   learned: 'set by your earlier answer',
   rule: 'set by a shipped rule',
   none: 'nobody claimed this',
-};
+});
 
 export function createLargeFlowsPanel({ root, countsNode, onChange } = {}) {
   const api = { fetchFlows: fetchLargeFlows, confirmCategory: updateTransactionCategory };
@@ -29,9 +32,11 @@ export function createLargeFlowsPanel({ root, countsNode, onChange } = {}) {
   const intro = el(
     'p',
     'large-flows__intro',
-    'Lines of at least $1,000 whose category no person has directly confirmed. '
-      + 'Confirm keeps the shown category as your own decision; anything wrong, '
-      + 'change it in Transactions instead.',
+    t(
+      'Lines of at least $1,000 whose category no person has directly confirmed. '
+        + 'Confirm keeps the shown category as your own decision; anything wrong, '
+        + 'change it in Transactions instead.',
+    ),
   );
   const list = el('div', 'large-flows__list');
   const status = el('p', 'large-flows__status');
@@ -58,27 +63,36 @@ export function createLargeFlowsPanel({ root, countsNode, onChange } = {}) {
     line.appendChild(descriptor);
     line.appendChild(answer);
     if (item.category_id !== null) {
-      const confirm = button('btn btn--quiet btn--compact', 'Confirm', async () => {
+      const confirm = button('btn btn--quiet btn--compact', t('Confirm'), async () => {
         confirm.disabled = true;
         try {
           await api.confirmCategory(item.txn_id, item.category_id);
-          status.textContent = `Confirmed ${item.category_id} for the ${formatMinor(item.amount_minor)} line.`;
+          // The category id is an identifier and the amount is a figure: both are
+          // substituted, never translated.
+          status.textContent = t('Confirmed {category} for the {amount} line.', {
+            category: item.category_id,
+            amount: formatMinor(item.amount_minor),
+          });
           if (onChange) onChange();
           await refresh();
         } catch (error) {
           confirm.disabled = false;
-          status.textContent = error.message || 'Could not confirm the category.';
+          status.textContent = error.message || t('Could not confirm the category.');
         }
       });
       confirm.setAttribute(
         'aria-label',
-        `Confirm ${item.category_id} for ${formatMinor(item.amount_minor)} on ${item.date}`,
+        t('Confirm {category} for {amount} on {date}', {
+          category: item.category_id,
+          amount: formatMinor(item.amount_minor),
+          date: item.date,
+        }),
       );
       line.appendChild(confirm);
     } else {
       const link = el('a', 'large-flows__classify');
       link.setAttribute('href', '#transactions');
-      link.textContent = 'Classify in Transactions';
+      link.textContent = t('Classify in Transactions');
       line.appendChild(link);
     }
     return line;
@@ -94,15 +108,17 @@ export function createLargeFlowsPanel({ root, countsNode, onChange } = {}) {
       }
       if (countsNode) {
         countsNode.textContent = data.items.length
-          ? `${data.items.length} large line(s) awaiting one look`
-            + (data.truncated ? ' (more beyond the first 200)' : '')
-          : 'Every large line has a person-confirmed answer.';
+          ? t('{count} large line(s) awaiting one look', { count: data.items.length })
+            // The separator stays outside the sentence; keys are normalised, so
+            // a leading space would vanish from the key and from the line.
+            + (data.truncated ? ` ${t('(more beyond the first 200)')}` : '')
+          : t('Every large line has a person-confirmed answer.');
       }
     } catch (error) {
       if (countsNode) {
         countsNode.textContent = isOffline(error)
-          ? 'Waiting for the local Ledgerbox service.'
-          : (error.message || 'Could not read large flows.');
+          ? t('Waiting for the local Ledgerbox service.')
+          : (error.message || t('Could not read large flows.'));
       }
     } finally {
       root.removeAttribute('aria-busy');

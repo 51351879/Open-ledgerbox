@@ -7,6 +7,7 @@
 
 import { clear, el, humanizeKey } from './api.js';
 import { CONNECTION_COPY } from './connection.js';
+import { t } from './i18n.js';
 
 function flag(text, tone) {
   return el('span', tone ? `status__flag status__flag--${tone}` : 'status__flag', text);
@@ -66,26 +67,38 @@ export function renderStatus(target, health) {
   const blocking = health.open_block || 0;
   const warning = health.open_warn || 0;
   if (blocking > 0) {
-    target.appendChild(flag(`${blocking} statement(s) refused and unbooked`, 'fail'));
+    target.appendChild(
+      flag(t('{count} statement(s) refused and unbooked', { count: blocking }), 'fail'),
+    );
   } else if (warning > 0) {
-    target.appendChild(flag(`${warning} warning(s) to look at`, 'warn'));
+    target.appendChild(flag(t('{count} warning(s) to look at', { count: warning }), 'warn'));
   } else {
-    target.appendChild(flag('Queue clear', 'ok'));
+    target.appendChild(flag(t('Queue clear'), 'ok'));
   }
 
   // Only ever mentioned when it is a problem. An integrity line that reads "ok"
   // on every load is a line nobody reads on the load where it does not.
   if (!health.integrity_ok) {
-    target.appendChild(flag('Database integrity check FAILED', 'fail'));
+    target.appendChild(flag(t('Database integrity check FAILED'), 'fail'));
   }
   if (health.schema_version !== health.schema_latest) {
     target.appendChild(
-      flag(`Schema ${health.schema_version} of ${health.schema_latest}: migrations pending`, 'warn'),
+      flag(
+        t('Schema {version} of {latest}: migrations pending', {
+          version: health.schema_version,
+          latest: health.schema_latest,
+        }),
+        'warn',
+      ),
     );
   }
   if (!health.database_present) {
     target.appendChild(
-      el('span', '', 'No ledger file yet. It is created the first time a statement is booked.'),
+      el(
+        'span',
+        '',
+        t('No ledger file yet. It is created the first time a statement is booked.'),
+      ),
     );
   }
 }
@@ -121,7 +134,10 @@ export function renderDiagnostics(target, health) {
   // The operator's own path, on their own machine, in their own browser. It is
   // also the answer to "where did my statement actually go".
   const where = el('p');
-  where.appendChild(document.createTextNode('Data directory '));
+  // The separating space stays outside the sentence: keys are normalised, so a
+  // trailing space would be trimmed out of the key and out of the layout with
+  // it, leaving the label welded to the path.
+  where.appendChild(document.createTextNode(`${t('Data directory')} `));
   where.appendChild(el('code', 'diag__path', health.data_dir || 'unknown'));
   facts.appendChild(where);
   target.appendChild(facts);
