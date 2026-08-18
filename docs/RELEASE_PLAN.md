@@ -132,16 +132,19 @@ PyPI Trusted Publishing（OIDC），PyPI 校验这个 workflow 的身份后签�
 
 **产品负责人的三步：**
 
-1. **在 PyPI 配置 Trusted Publisher。** 登录 pypi.org →（首发用 pending publisher，
-   因为项目名还不存在）Your projects → Publishing → Add a new pending publisher：
+1. ~~**在 PyPI 配置 Trusted Publisher。**~~ **已完成（2026-08-18）。** 路径是
+   `https://pypi.org/manage/account/publishing/`——账户左侧导航里独立的 **Publishing**
+   一项，不在 Your projects 下面（本文最初写错了路径，产品负责人照着找不到）。首发用
+   pending publisher，因为项目名还不存在。已登记：
    - PyPI Project Name: `ledgerbox`
    - Owner: `51351879`，Repository name: `Open-ledgerbox`
    - Workflow name: `ci.yml`
    - Environment name: `pypi`
 
-   2026-08-17 只读核对：`https://pypi.org/pypi/ledgerbox/json` 返回 404，名称当时未被占用；
-   这不是预留，先到先得。若届时已被占用，先改 `pyproject.toml` 的 `name` 与 README 的安装
-   说明，再回到这一步——**不要**用近似名硬发。
+   PyPI 在该页面明写：**pending publisher 不预留名称**。在项目真正被创建之前，任何人都可能
+   先创建 `ledgerbox`。2026-08-17 只读核对时 `https://pypi.org/pypi/ledgerbox/json` 返回 404，
+   当时未被占用。若届时已被抢注，先改 `pyproject.toml` 的 `name` 与 README 的安装说明，
+   再回到这一步——**不要**用近似名硬发。
 
 2.（可选但建议）**给 GitHub 环境 `pypi` 加保护规则**：Settings → Environments →
    `pypi` → Required reviewers 填自己。加了之后每次 tag 推送会停在等待批准，
