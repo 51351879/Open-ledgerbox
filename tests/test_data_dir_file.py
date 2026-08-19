@@ -59,7 +59,10 @@ def test_a_chinese_data_dir_survives_the_file_byte_for_byte(
     code, out, _ = _run(capsys, "--data-dir-file", str(pointer), "doctor")
 
     assert code == 0
-    assert str(target) in out, "doctor must state the exact directory it resolved"
+    # Resolved on both sides: the hosted runner hands the fixture out as a DOS
+    # 8.3 short path (RUNNER~1) while doctor prints the long form -- the exact
+    # comparison the first hosted CI run already went red on, elsewhere.
+    assert str(target.resolve()) in out, "doctor must state the exact directory it resolved"
     assert MOJIBAKE not in out
     assert target.is_dir(), "the resolved directory is the one the user named"
     assert not (git_free_tmp / MOJIBAKE).exists()
@@ -78,7 +81,7 @@ def test_a_bom_written_by_a_windows_editor_is_not_part_of_the_path(
     code, out, _ = _run(capsys, "--data-dir-file", str(pointer), "doctor")
 
     assert code == 0
-    assert str(target) in out
+    assert str(target.resolve()) in out
     assert target.is_dir()
 
 
@@ -96,7 +99,7 @@ def test_surrounding_quotes_and_whitespace_are_packaging_not_path(
     code, out, _ = _run(capsys, "--data-dir-file", str(pointer), "doctor")
 
     assert code == 0
-    assert str(target) in out
+    assert str(target.resolve()) in out
     assert target.is_dir()
 
 
