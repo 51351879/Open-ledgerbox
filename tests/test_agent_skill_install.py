@@ -391,3 +391,41 @@ def test_every_bundle_this_project_ever_shipped_upgrades_without_force(client: s
             "a recorded bundle names the same files; a different file list is a "
             "different shape of Skill and would not be recognised at all"
         )
+
+
+def test_the_first_real_stranger_install_is_recognised_as_official() -> None:
+    """A fingerprint recovered from a real machine, authenticated against history.
+
+    The first outside-style setup run (2026-08-19, a fresh clone in a test
+    folder) dead-ended: the machine held a personal claude-code Skill installed
+    around 2026-08-11, doctor called it custom, and setup -- correctly --
+    refused to overwrite it or register MCP. Forensics on that install found
+    **zero drift**: every file matched its own manifest byte for byte. It was
+    a genuine official bundle; the catalogue had simply never recorded the
+    combination, which differed from ``_BEFORE_ONE_COMMAND_SETUP`` in exactly
+    one file, ``references/agent-setup.md``.
+
+    That file's installed bytes hash to the ``docs/AGENT_SETUP.md`` of
+    pre-squash commit ``953c052`` ("fix: make copied Agent setup fail closed
+    on a failed Skill install", 2026-08-10) -- verified blob by blob against
+    the archived history, not taken on trust from the installed tree. A
+    catalogue entry earns its place by provenance, because a manifest is not
+    authority merely for calling itself official.
+
+    The policy was never the defect. Refusing to overwrite what the catalogue
+    does not recognise is what stands between a user's private edits and a
+    silent replacement; the defect was a hole in what the catalogue knew.
+    """
+    aug10_setup_guide = "1eb1ddcd0414966fbe739d0447d6b3c4c022c611d6259d995d0d04033a2b4c4a"
+    for client in ("codex", "claude-code"):
+        typed = cast(agent_skill_install.AgentClient, client)
+        expected = {
+            **agent_skill_install._BEFORE_ONE_COMMAND_SETUP[typed],
+            "references/agent-setup.md": aug10_setup_guide,
+        }
+        recorded = agent_skill_install.PREVIOUS_OFFICIAL_BUNDLES[typed][OFFICIAL_SKILL_VERSION]
+        assert expected in recorded, (
+            f"the authenticated 2026-08-11-era {client} bundle is not in the "
+            f"catalogue; a real untouched install reads as custom and the "
+            f"non-force upgrade path stays bricked"
+        )

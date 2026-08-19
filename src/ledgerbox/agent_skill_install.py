@@ -268,6 +268,34 @@ _BEFORE_TRANSLATE_SKILL_NOTE: dict[AgentClient, dict[str, str]] = {
     for client in ("codex", "claude-code")
 }
 
+# The ``_BEFORE_ONE_COMMAND_SETUP`` files carrying the setup guide of
+# 2026-08-10 -- pre-squash commit 953c052, the fail-closed copied-setup
+# revision -- from the stretch when the Skill text had moved on and the guide
+# had not yet been rewritten for one-command setup.
+#
+# Recovered from the first stranger-style setup run, 2026-08-19: a fresh clone
+# in a test folder found a personal claude-code Skill installed around
+# 2026-08-11, doctor called it custom, and setup correctly refused to touch it
+# or register MCP. Forensics found **zero drift** -- every installed file
+# matched its own manifest -- and the one file no recorded bundle matched was
+# authenticated byte-for-byte against the archived pre-squash history rather
+# than taken on trust from the installed tree. A real official install was
+# bricked by a hole in this catalogue, not by the policy; the policy is what
+# keeps a user's private edits from being silently replaced.
+#
+# The ``SHIPPED_BUNDLES`` tripwire in the test suite now makes this class of
+# omission red at commit time, but installs that predate the tripwire can only
+# be recovered this way: found in the wild, verified against history, recorded.
+_BEFORE_ONE_COMMAND_GUIDE: dict[AgentClient, dict[str, str]] = {
+    client: {
+        **_BEFORE_ONE_COMMAND_SETUP[client],
+        "references/agent-setup.md": (
+            "1eb1ddcd0414966fbe739d0447d6b3c4c022c611d6259d995d0d04033a2b4c4a"
+        ),
+    }
+    for client in ("codex", "claude-code")
+}
+
 # The Codex metadata file, hashed twice: once as every checkout produces it
 # (LF, which `.gitattributes` has always asked for) and once as a Windows
 # worktree predating that rule kept it (CRLF).
@@ -302,6 +330,7 @@ PREVIOUS_OFFICIAL_BUNDLES: dict[AgentClient, dict[str, tuple[dict[str, str], ...
         OFFICIAL_SKILL_VERSION: _either_line_ending(
             (
                 _BEFORE_ONE_COMMAND_SETUP["codex"],
+                _BEFORE_ONE_COMMAND_GUIDE["codex"],
                 _BEFORE_ABSTENTION_PROTOCOL["codex"],
                 _BEFORE_PASTE_SAFE_SETUP["codex"],
                 _BEFORE_TRANSLATE_SKILL_NOTE["codex"],
@@ -312,6 +341,7 @@ PREVIOUS_OFFICIAL_BUNDLES: dict[AgentClient, dict[str, tuple[dict[str, str], ...
     "claude-code": {
         OFFICIAL_SKILL_VERSION: (
             _BEFORE_ONE_COMMAND_SETUP["claude-code"],
+            _BEFORE_ONE_COMMAND_GUIDE["claude-code"],
             _BEFORE_ABSTENTION_PROTOCOL["claude-code"],
             _BEFORE_PASTE_SAFE_SETUP["claude-code"],
             _BEFORE_TRANSLATE_SKILL_NOTE["claude-code"],
