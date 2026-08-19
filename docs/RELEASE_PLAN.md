@@ -76,7 +76,7 @@ runner 上的安装方式、npm/node 版本 pin、pip 缓存。每个红灯按"�
 的判断没有类型检查也没有反例能够到；`tests/test_package_smoke.py` 逐条证伪它。
 脚本额外断言 `ledgerbox` 是从 venv 而不是 checkout 导入的、workspace 解析到包内
 而不是树内——`agent_workspace_root()` 优先找 checkout，所以少了这两条，一个什么
-Skill 都没带的 wheel 也会报绿。**(b) 仍未做**，README 的 "Not yet on PyPI" 保持事实。
+Skill 都没带的 wheel 也会报绿。**(b) 已完成（2026-08-19 UTC，见 §4b 清单末尾）**。
 
 ## 5. 候选 wire template/occurrences 字段
 
@@ -152,23 +152,20 @@ PyPI Trusted Publishing（OIDC），PyPI 校验这个 workflow 的身份后签�
    那不是更严格，那是发不出去。每次 tag 推送现在会停在 `publish` 等待批准，
    发布从"推一个 tag"变成"推一个 tag 并按一次确认"。
 
-3. **打 tag 并推送：**
+3. ~~**打 tag 并推送**~~ **已完成（2026-08-19 UTC）。** `v0.1.0a1` 指向 `7262826`。
+   CI 在 tag 上八道闸门全绿（矩阵 ×2、tag/版本一致性、wheel smoke、bean-check、
+   frontend、索引卫生、密扫），`publish` 停在环境 `pypi` 等待批准，产品负责人在
+   GitHub 上按下 Approve and deploy 后上传——**上传的是 `package` job 产出并验证过的
+   那个 dist**，不是重新构建。PyPI 记录的上传时间 `2026-08-19T01:16Z`；
+   `https://pypi.org/project/ledgerbox/` 现为 0.1.0a1，wheel + sdist。
+   pending publisher 已随项目创建自动转为正式 trusted publisher。
 
-   ```
-   git tag -a v0.1.0a1 -m "ledgerbox 0.1.0a1"
-   git push origin v0.1.0a1
-   ```
+**发布后：**
 
-   预期：CI 在 tag 上跑完整矩阵 + `package` smoke + 新增的
-   `the tag and the version are one number`；全绿后 `publish` 才拿
-   **`package` job 上传的那个 wheel**（不是第二次构建）传到 PyPI。
-   若 tag 与 `pyproject.toml` 版本不一致，`release-tag` job 先红，什么都不会上传。
-
-**发布后（可以交回给下一个 session 执行）：**
-
-4. `uvx ledgerbox --version` 冷启动 smoke——在一台没装过 ledgerbox 的 Windows 上跑，
-   预期打印 `ledgerbox 0.1.0a1`；再 `uvx --from "ledgerbox[mcp]" ledgerbox-mcp --help`
-   预期打印 usage 并退出 0。
-5. 只有 4 通过之后，才把 README 的 `Not yet on PyPI — run from a checkout.` 改成事实
-   （安装命令 + 仍需 `ledgerbox setup` 的说明），并在 CHANGELOG 记一行。
-   **在此之前那句话必须留着**——它现在是真的。
+4. ~~`uvx` 冷启动 smoke~~ **已完成（2026-08-19 UTC，紧随发布）。** 在本机仓库外目录、
+   `uv cache clean ledgerbox` 之后（uvx 每次建全新隔离环境，即"没装过"的语义）：
+   `uvx ledgerbox --version` 从 PyPI 拉 25 个包并打印 `ledgerbox 0.1.0a1`，exit 0；
+   `uvx --from "ledgerbox[mcp]" ledgerbox-mcp --help` 装 40 个包并打印 usage，exit 0。
+5. ~~README 改口~~ **已完成，随本次提交。** README 两种语言、CHANGELOG 同轮改为事实，
+   并如实写明边界：一句话装机 Skill 只随 checkout 分发，pip 安装的用户手动运行同一条
+   `ledgerbox setup`——发上 PyPI 多开了一扇门，没有改变最顺的那条路。

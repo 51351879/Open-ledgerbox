@@ -3180,6 +3180,33 @@ Node 从 95 涨到 **100**；Python 1130 passed / 100 skipped 不变。剩余未
 
 ---
 
+## 5bq. 0.1.0a1 上了 PyPI，README 才被允许改口（2026-08-19 UTC）
+
+产品负责人拍板首发。顺序照 `RELEASE_PLAN.md` §4b 清单，一步没跳：
+
+1. **Trusted Publisher**（2026-08-18）：pypi.org 账户导航 Publishing 页登记 pending
+   publisher——项目 `ledgerbox`、仓库 `51351879/Open-ledgerbox`、workflow `ci.yml`、
+   环境 `pypi`。全程没有任何密钥存在过，这不是流程的副产品，是选 Trusted Publishing
+   的理由本身。
+2. **发布闸门**：GitHub 环境 `pypi` 加 required reviewer（产品负责人本人）。
+   `Prevent self-review` 保持关闭——单人仓库开了它就没人能批，那不是更严，是发不出去。
+3. **tag `v0.1.0a1`** 指向 `7262826`。CI 八道闸门全绿后 `publish` 停在 waiting，
+   产品负责人亲手按的 Approve——这道门第一次用就由装门的人自己按，代按等于没装。
+   上传的是 `package` job 产出并验证过的 dist，不是重新构建。PyPI 记录
+   `2026-08-19T01:16Z`，wheel + sdist。
+4. **冷启动 smoke**：仓库外目录、清缓存后，`uvx ledgerbox --version` 从 PyPI 全新拉包
+   打印 `ledgerbox 0.1.0a1`，`uvx --from "ledgerbox[mcp]" ledgerbox-mcp --help` 打印
+   usage，均 exit 0。
+5. **只有 smoke 过了**，README（两种语言）与 CHANGELOG 才把 "Not yet on PyPI"
+   改成事实——那句话在此之前的每一天都是真的，这正是它一直留着的原因。改口同时如实
+   写明边界：一句话装机 Skill 只随 checkout 分发，pip 用户手动跑同一条
+   `ledgerbox setup`；上 PyPI 是多开一扇门，不是换路。
+
+`0.1.0a1` 这个文件名从此永久占用；有问题走 `0.1.0a2`，不删不重传。
+pending publisher 已自动转正。README 徽章与事实一致，无需改动。
+
+---
+
 ## 6. 未完成
 
 ### P2 —— 分析与前端

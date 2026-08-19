@@ -72,4 +72,10 @@ scope section for exactly what "supported" means here.
 - One bank, one account type, one platform. CSV import, other banks,
   macOS/Linux, and other screen readers than Windows Narrator are not
   supported; the README table is the authority.
-- Not yet on PyPI; run from a checkout.
+- Published to PyPI as `ledgerbox` on 2026-08-19 (UTC), via Trusted
+  Publishing from the tagged CI run — the uploaded wheel is the one the
+  `package` job installed and interrogated, not a rebuild. Cold-start
+  verified from a fresh environment: `uvx ledgerbox --version` printed this
+  version and `uvx --from "ledgerbox[mcp]" ledgerbox-mcp --help` printed
+  usage, both exit 0. The checked-in setup Skill still ships only in the
+  checkout; a pip install runs `ledgerbox setup` by hand.

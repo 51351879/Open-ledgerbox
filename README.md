@@ -87,7 +87,7 @@ Then double-click `start-ledgerbox.cmd`, open the page, and drop a statement on 
 | Windows Narrator (Agent flows) | ✅ Real acceptance pass |
 | macOS / Linux / other browsers & screen readers | ❌ Untested — community PRs with their own validation welcome |
 
-Not yet on PyPI — run from a checkout. No cloud sync, no bank-login scraping, no mobile app, ever ([why](docs/AUTOMATION.md)).
+On PyPI as [`ledgerbox`](https://pypi.org/project/ledgerbox/) — try it with `uvx ledgerbox --version`, or `pip install ledgerbox[mcp]` and run the same `ledgerbox setup` command the Skill would run. Cloning is still the smoothest path: the one-sentence setup Skill ships in the checkout. No cloud sync, no bank-login scraping, no mobile app, ever ([why](docs/AUTOMATION.md)).
 
 ## Your data
 

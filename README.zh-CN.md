@@ -87,7 +87,7 @@ python -m venv .venv
 | Windows 讲述人（Agent 流程） | ✅ 已做真实验收 |
 | macOS / Linux / 其他浏览器与读屏器 | ❌ 未测试——欢迎社区带着自己的验证提 PR |
 
-尚未发布到 PyPI——请从 checkout 运行。永远不会有云同步、不会去爬你的网银登录、不会有手机 App（[为什么](docs/AUTOMATION.md)）。
+已发布到 PyPI：[`ledgerbox`](https://pypi.org/project/ledgerbox/)——用 `uvx ledgerbox --version` 一次性试跑，或 `pip install ledgerbox[mcp]` 后手动运行同一条 `ledgerbox setup` 命令。clone 仍是最顺的路径：一句话装机 Skill 随 checkout 分发。永远不会有云同步、不会去爬你的网银登录、不会有手机 App（[为什么](docs/AUTOMATION.md)）。
 
 ## 你的数据
 
