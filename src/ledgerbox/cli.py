@@ -1298,6 +1298,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="where the ledger lives (default: the OS data directory; "
         "refuses any path inside a git repository)",
     )
+    # For launchers that cannot carry the path itself. `start-ledgerbox.cmd`
+    # used to read data-dir.txt with `set /p`, and cmd.exe decodes a redirected
+    # file in the console's OEM codepage -- the UTF-8 bytes of a Chinese folder
+    # name came out as CP437 mojibake, and the server faithfully created and
+    # served a directory named that. A filename is ASCII and survives any
+    # codepage; the bytes inside it are decoded here, by one program, as UTF-8.
+    parser.add_argument(
+        "--data-dir-file",
+        type=Path,
+        default=None,
+        help="read --data-dir from this UTF-8 file (one line: the folder); "
+        "mutually exclusive with --data-dir",
+    )
     # No subcommand means `serve`. `uvx ledgerbox` is the documented first
     # experience and it has to end with a page in a browser, not a usage error.
     # The defaults below are what `serve`'s own parser would have supplied, so
@@ -1518,9 +1531,53 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _data_dir_from_file(parser: argparse.ArgumentParser, pointer: Path) -> Path:
+    """The one decode of the pointer file, with each failure named.
+
+    ``utf-8-sig`` so a BOM prepended by a Windows editor is packaging, not the
+    first character of the path. Surrounding whitespace and one pair of quotes
+    are stripped for the same reason: a path pasted from PowerShell keeps its
+    quotes, and a literal quote is not a legal character in a Windows directory
+    name anyway. What must NOT happen here is a lenient decode -- a path
+    fabricated from a UTF-16 file read with ``errors="ignore"`` is the mojibake
+    defect again, wearing manners. Every failure is a usage error (exit 2),
+    same as the flag being misspelt.
+    """
+    try:
+        raw = pointer.read_text(encoding="utf-8-sig")
+    except FileNotFoundError:
+        parser.exit(2, f"ledgerbox: --data-dir-file: {pointer} does not exist\n")
+    except UnicodeDecodeError as error:
+        parser.exit(
+            2,
+            f"ledgerbox: --data-dir-file: {pointer} is not UTF-8 ({error}); "
+            f"save it as UTF-8 -- one line, the folder your ledger should "
+            f"live in\n",
+        )
+    line = raw.strip().strip('"').strip()
+    if not line:
+        parser.exit(
+            2,
+            f"ledgerbox: --data-dir-file: {pointer} is empty; it must hold one "
+            f"line, the folder your ledger should live in\n",
+        )
+    return Path(line)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     configure_stdio()
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.data_dir_file is not None:
+        # Resolved here, once, before any command runs: every command reads
+        # `args.data_dir` and none of them learns a second way to find it.
+        if args.data_dir is not None:
+            parser.exit(
+                2,
+                "ledgerbox: --data-dir and --data-dir-file disagree about "
+                "authority; pass exactly one\n",
+            )
+        args.data_dir = _data_dir_from_file(parser, args.data_dir_file)
     return int(args.func(args))
 
 

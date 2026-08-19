@@ -7,6 +7,35 @@ development history behind this file lives on the machine it happened on —
 the repository begins at the release below, so this file is the change
 narrative, written from what a user can see rather than from commits.
 
+## 0.1.0a2 (unreleased)
+
+### Fixed
+
+- A data directory with a non-ASCII name -- `D:\test账本-data` -- was served
+  as CP437 mojibake when started through `start-ledgerbox.cmd`. cmd.exe
+  decodes a redirected file in the console's OEM codepage, so the launcher's
+  `set /p` read of `data-dir.txt` garbled the UTF-8 path bytes and the server
+  faithfully created and used a directory named the garble, while `setup` and
+  the MCP registration pointed at the real one: one machine, two ledgers, no
+  error anywhere. The launcher now passes only the *filename* and the new
+  `--data-dir-file` option reads the path itself as UTF-8 (BOM tolerated,
+  surrounding quotes stripped, non-UTF-8 refused with the reason). Found by
+  the first outside-style install; reproduced and verified under a forced
+  CP437 console.
+- An untouched official Skill installed around 2026-08-11 was classified
+  `custom`, which blocked the automatic upgrade and MCP registration built
+  for exactly that case. Its fingerprint -- authenticated file by file
+  against archived history -- is now in the catalogue, and such installs
+  upgrade on their own again.
+
+### Changed
+
+- The setup Skill now proposes a concrete data-directory default
+  (`<checkout>-data`, beside the clone) so one word answers the question,
+  and, on a genuinely custom personal Skill, shows which files differ and
+  asks before replacing anything -- instead of stopping dead. Declining
+  leaves everything untouched.
+
 ## 0.1.0a1 (preview) — 2026-08-16
 
 First public preview. Windows 11 is the supported platform; see the README's

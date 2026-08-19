@@ -3243,6 +3243,41 @@ Skill 文本改为：跑 doctor、把差异摆给用户、明说"你的修改会
 
 ---
 
+## 5bs. 中文目录名被 cmd.exe 吃掉：一台机器、两本账、没有任何报错（2026-08-19）
+
+同一场陌生人式装机的第三个战果，也是最重的一个。用户把数据目录起名 `D:	est账本-data`，
+页面侧栏显示 `D:	estΦ┤ªµ£¼-data`。这不是显示毛病：`Φ┤ªµ£¼` 恰是 `账本` 的 UTF-8 字节
+按 CP437 解码的结果，逐字形对上截图。病灶在 `start-ledgerbox.cmd` 的
+`set /p LEDGERBOX_DATA_DIR=<data-dir.txt`——**cmd.exe 用控制台 OEM 码页解码重定向文件**，
+双击启动时那就是系统 OEM（该机为 437）。服务器忠实地创建并服务了一个名字是乱码的目录，
+而 setup 与 MCP 注册的路径从不经过 cmd.exe、指向真目录——一台机器、两本账、全程无一处报错。
+本仓库自己的 `data-dir.txt` 是纯 ASCII，所以拥有者从未踩到：又一个 ASCII-only 盲区。
+
+修法是移除类而不是修实例：**路径文本从此不进 cmd.exe**。启动器只传文件名（ASCII，任何码页
+都安全），新的全局 `--data-dir-file` 由 ledgerbox 自己按 UTF-8 读出路径——BOM 容忍
+（`utf-8-sig`，Windows 编辑器爱加）、包裹引号剥掉（PowerShell 粘贴常带）、非 UTF-8 拒绝并
+说明原因（宽容解码造出来的路径就是 mojibake 换了副面孔）、`--data-dir` 与 `--data-dir-file`
+同给报错而不是靠没人记得的优先级。七条反例先行全红；实现后在**强制 chcp 437** 的批处理里
+双向复现：旧路子把 `验证` 传成乱码，新路子逐字节原样到达。环境变量分支保持原样——
+env 在 cmd 里全程 Unicode，不经字节解码，本来就安全。
+
+**顺带一次诚实纠错**：§5bp 说"剩余未翻 27 条（missingKeys() 逐条可读）"低估了范围。
+`missingKeys()` 只看得见静态标记和已接线模块；扫描显示**未接线模块里还有约 135 条英文散文**，
+跨 18 个文件（advice 14、category-claim 14、transaction-row 14、deletion-plan 11、analytics 10、
+chart-monthly 8、statements 8、transactions 8、transaction-filters 7、triage-groups 7、
+agent-proposals 6、triage 6、transaction-bulk 5、upload 5、review 4、date-range 3、
+agent-job-panel 3、agent-proposal-groups 2），另有 agent-center 已部分接线但仍余 16 条。
+用户截图里的英文 100% 属于这批"第二批未做"，不是词典漏词；但"27 条"那句话本身是
+用一张只覆盖一半的表报了全体，正是本项目反对的那类句子。已在此改正。
+第二批的优先项也由截图给出：侧栏目录已是中文（Agent 提案/覆盖率分流/规划备注）而对应
+面板标题仍是英文（Agent proposals / Remaining coverage triage / Planning notes）——
+同一页面同一事物两个名字，比未翻更糟。
+
+版本随修复碰到 `0.1.0a2 (unreleased)`；CHANGELOG 闸门要求首个标题与打包版本一致，
+a1 的叙事保持为它发布时的样子。
+
+---
+
 ## 6. 未完成
 
 ### P2 —— 分析与前端
