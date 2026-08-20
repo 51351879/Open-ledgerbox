@@ -63,7 +63,7 @@ export function addDirectory(root) {
  * attention, and nine zeroes down the side of the page is nine claims that
  * nothing does, competing with the four that mean something.
  */
-export function setBadge(node, count, label = 'pending') {
+export function setBadge(node, count, label = t('pending')) {
   const value = Math.max(0, Number(count) || 0);
   node.textContent = String(value);
   node.hidden = value === 0;

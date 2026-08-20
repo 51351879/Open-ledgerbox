@@ -21,7 +21,7 @@ import { addDirectory, setBadge } from './sidebar-nav.js';
 
 async function defaultCopyText(text) {
   if (!globalThis.navigator?.clipboard?.writeText) {
-    throw new Error('Clipboard access is unavailable in this browser.');
+    throw new Error(t('Clipboard access is unavailable in this browser.'));
   }
   await navigator.clipboard.writeText(text);
 }
@@ -66,13 +66,16 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
   // in index.html: without it the static sweep translates the eyebrow and
   // this line puts it straight back into English, in front of the reader.
   panel.appendChild(el('p', 'sidebar__eyebrow', t('This ledger')));
-  const ledgerName = el('strong', 'sidebar__ledger-name', 'Reading…');
+  const ledgerName = el('strong', 'sidebar__ledger-name', t('Reading…'));
   const ledgerPath = el('code', 'sidebar__ledger-path');
-  ledgerPath.setAttribute('title', 'The data directory this page and copied commands use');
+  ledgerPath.setAttribute(
+    'title',
+    t('The data directory this page and copied commands use'),
+  );
   panel.appendChild(ledgerName);
   panel.appendChild(ledgerPath);
 
-  const agentState = el('p', 'agent-status agent-status--checking', 'Checking Agent MCP…');
+  const agentState = el('p', 'agent-status agent-status--checking', t('Checking Agent MCP…'));
   agentState.setAttribute('aria-live', 'polite');
   panel.appendChild(agentState);
   const agentEvidence = el('p', 'sidebar__evidence');
@@ -88,60 +91,70 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
   const badges = addDirectory(panel);
 
   const setup = el('details', 'agent-setup');
-  setup.appendChild(el('summary', 'agent-setup__summary', 'Connect or change Agent'));
+  setup.appendChild(el('summary', 'agent-setup__summary', t('Connect or change Agent')));
   const setupBody = el('div', 'agent-setup__body');
   const setupClient = clientSelect();
-  setupBody.appendChild(labelledControl('Client', setupClient));
+  setupBody.appendChild(labelledControl(t('Client'), setupClient));
   const runnerSkillState = el('p', 'agent-setup__aside');
   const personalSkillState = el('p', 'agent-setup__aside');
   setupBody.appendChild(runnerSkillState);
   setupBody.appendChild(personalSkillState);
   const setupActions = el('div', 'agent-setup__actions');
-  const copySetup = button('btn btn--quiet btn--compact', 'Copy safe setup steps', () => copySetupCommand());
-  const copyRun = button('btn btn--quiet btn--compact', 'Copy classification prompt', () => copyRunPrompt());
+  const copySetup = button('btn btn--quiet btn--compact', t('Copy safe setup steps'),
+    () => copySetupCommand());
+  const copyRun = button('btn btn--quiet btn--compact', t('Copy classification prompt'),
+    () => copyRunPrompt());
   setupActions.appendChild(copySetup);
   setupActions.appendChild(copyRun);
   setupBody.appendChild(setupActions);
   const tutorial = el(
     'p',
     'agent-setup__tutorial',
-    '1. Copy the safe setup step. 2. Paste that single line into PowerShell: it installs or '
-      + 'safely upgrades the personal Skill first, then registers MCP only if that install '
-      + 'succeeded. 3. Start or reopen the selected client. 4. Check its MCP list for '
-      + '“ledgerbox”. The light above turns green only after that client actually opens the bridge.',
+    t(
+      '1. Copy the safe setup step. 2. Paste that single line into PowerShell: it installs '
+        + 'or safely upgrades the personal Skill first, then registers MCP only if that '
+        + 'install succeeded. 3. Start or reopen the selected client. 4. Check its MCP list '
+        + 'for “ledgerbox”. The light above turns green only after that client actually '
+        + 'opens the bridge.',
+    ),
   );
   setupBody.appendChild(tutorial);
   const guide = el('p', 'agent-setup__guide');
-  guide.appendChild(el('span', '', 'Full human and Agent-readable guide: '));
+  // The separator stays outside the sentence; a normalised key loses it.
+  guide.appendChild(el('span', '', `${t('Full human and Agent-readable guide:')} `));
   const guidePath = el('code', '', 'docs/AGENT_SETUP.md');
   guide.appendChild(guidePath);
   setupBody.appendChild(guide);
 
   const settings = el('details', 'agent-settings');
-  settings.appendChild(el('summary', 'agent-settings__summary', 'Classification settings'));
+  settings.appendChild(el('summary', 'agent-settings__summary', t('Classification settings')));
   const settingsBody = el('div', 'agent-settings__body');
   const policyClient = clientSelect();
   const mode = el('select', 'control__field');
-  mode.appendChild(option('automatic', 'Apply answers automatically'));
-  mode.appendChild(option('review_first', 'Review suggestions first'));
-  const autoImports = checkbox('Auto classify new imports');
+  // `automatic` and `review_first` are wire values; only their labels move.
+  mode.appendChild(option('automatic', t('Apply answers automatically')));
+  mode.appendChild(option('review_first', t('Review suggestions first')));
+  const autoImports = checkbox(t('Auto classify new imports'));
   const acknowledge = checkbox(
-    'I understand returned transaction facts may be sent to this client’s model provider.',
+    t('I understand returned transaction facts may be sent to this client’s model '
+      + 'provider.'),
     'agent-setup__ack',
   );
-  settingsBody.appendChild(labelledControl('Local client', policyClient));
-  settingsBody.appendChild(labelledControl('Application mode', mode));
+  settingsBody.appendChild(labelledControl(t('Local client'), policyClient));
+  settingsBody.appendChild(labelledControl(t('Application mode'), mode));
   settingsBody.appendChild(autoImports.wrapper);
   settingsBody.appendChild(acknowledge.wrapper);
   const settingsAside = el(
     'p',
     'agent-setup__aside',
-    'When enabled, a successful import starts one bounded classification run in the selected local client.',
+    t('When enabled, a successful import starts one bounded classification run in the '
+      + 'selected local client.'),
   );
   settingsBody.appendChild(settingsAside);
   const policyActions = el('div', 'agent-setup__actions');
-  const save = button('btn btn--compact', 'Save and enable', () => savePolicy());
-  const disconnect = button('btn btn--quiet btn--compact', 'Disable', () => disconnectPolicy());
+  const save = button('btn btn--compact', t('Save and enable'), () => savePolicy());
+  const disconnect = button('btn btn--quiet btn--compact', t('Disable'),
+    () => disconnectPolicy());
   policyActions.appendChild(save);
   policyActions.appendChild(disconnect);
   settingsBody.appendChild(policyActions);
@@ -165,20 +178,24 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
   function renderSkillStatus() {
     const selected = data?.clients.find((item) => item.client === setupClient.value);
     if (!selected) {
-      runnerSkillState.textContent = 'Runner Skill status unavailable.';
-      personalSkillState.textContent = 'Personal Skill status unavailable.';
+      runnerSkillState.textContent = t('Runner Skill status unavailable.');
+      personalSkillState.textContent = t('Personal Skill status unavailable.');
       copySetup.disabled = true;
       return;
     }
     runnerSkillState.textContent = selected.runner_skill_compatible
-      ? 'Runner Skill compatible with this Ledgerbox protocol.'
-      : 'Runner Skill incompatible or unavailable in this Ledgerbox installation.';
+      ? t('Runner Skill compatible with this Ledgerbox protocol.')
+      : t('Runner Skill incompatible or unavailable in this Ledgerbox installation.');
     const clientArg = selected.client;
+    // The command inside the last one is a command and is substituted, not
+    // looked up; the sentence around it is this page's and is.
     const personalCopy = {
-      current: 'Personal Skill current.',
-      missing: 'Personal Skill missing. Safe setup installs it before MCP registration.',
-      outdated: 'Personal Skill outdated. Safe setup upgrades only a recognised official copy.',
-      custom: `Personal Skill custom. Stop and run ledgerbox agent doctor --client ${clientArg}; decide manually.`,
+      current: t('Personal Skill current.'),
+      missing: t('Personal Skill missing. Safe setup installs it before MCP registration.'),
+      outdated: t('Personal Skill outdated. Safe setup upgrades only a recognised official '
+        + 'copy.'),
+      custom: t('Personal Skill custom. Stop and run ledgerbox agent doctor --client '
+        + '{client}; decide manually.', { client: clientArg }),
     };
     personalSkillState.textContent = personalCopy[selected.personal_skill_state];
     copySetup.disabled = !selected.runner_skill_compatible
@@ -192,14 +209,18 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
     ledgerPath.textContent = data.ledgerbox.data_dir;
     if (active) {
       agentState.className = 'agent-status agent-status--up';
-      agentState.textContent = `${LABELS[active.client]} MCP connected`;
+      agentState.textContent = t('{client} MCP connected', { client: LABELS[active.client] });
       agentEvidence.textContent = active.last_result === 'partial'
-        ? `Last run submitted ${active.submitted_count} of ${active.candidate_count} candidates.`
-        : 'Live session observed by this ledger.';
+        ? t('Last run submitted {submitted} of {candidates} candidates.', {
+          submitted: active.submitted_count,
+          candidates: active.candidate_count,
+        })
+        : t('Live session observed by this ledger.');
     } else {
       agentState.className = 'agent-status agent-status--down';
-      agentState.textContent = 'No Agent MCP connected';
-      agentEvidence.textContent = 'Ledgerbox may still be online; no Agent bridge is active now.';
+      agentState.textContent = t('No Agent MCP connected');
+      agentEvidence.textContent = t('Ledgerbox may still be online; no Agent bridge is '
+        + 'active now.');
     }
     const selected = policy.selected_client || active?.client || 'codex';
     // The dropdowns follow the STORED policy only when it changes. Re-asserting
@@ -219,7 +240,7 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
     disclosure.textContent = data.provider_disclosure;
     guidePath.textContent = data.setup_guide;
     const omitted = jobPanel.render(data.latest_batch, policy);
-    setBadge(badges.needs, omitted, 'need classification');
+    setBadge(badges.needs, omitted, t('need classification'));
     setBadge(badges.proposals, data.ledgerbox.pending_review_count);
     setBadge(badges.triage, data.ledgerbox.pending_triage_count);
     setBadge(badges.review, data.ledgerbox.open_review_count);
@@ -237,10 +258,10 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
       copyRun.disabled = true;
       jobPanel.unavailable();
       agentState.className = 'agent-status agent-status--down';
-      agentState.textContent = 'Agent status unavailable';
+      agentState.textContent = t('Agent status unavailable');
       agentEvidence.textContent = isOffline(error)
-        ? 'Waiting for the local Ledgerbox service.'
-        : (error.message || 'Could not read Agent status.');
+        ? t('Waiting for the local Ledgerbox service.')
+        : (error.message || t('Could not read Agent status.'));
     } finally {
       root.removeAttribute('aria-busy');
       scheduleWatch();
@@ -268,10 +289,10 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
     try {
       data = validatedCenter(await api.startRound());
       render();
-      status.textContent = 'Classification round queued. This panel follows it.';
+      status.textContent = t('Classification round queued. This panel follows it.');
     } catch (error) {
       render();
-      status.textContent = error.message || 'Could not start a classification round.';
+      status.textContent = error.message || t('Could not start a classification round.');
     } finally {
       scheduleWatch();
     }
@@ -282,15 +303,18 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
     const selected = data.clients.find((item) => item.client === setupClient.value);
     if (!selected?.runner_skill_compatible || selected.personal_skill_state === 'custom') {
       status.textContent = selected?.personal_skill_state === 'custom'
-        ? `Stop and run ledgerbox agent doctor --client ${setupClient.value}; decide manually.`
-        : 'Safe setup is unavailable for this Ledgerbox installation.';
+        ? t('Stop and run ledgerbox agent doctor --client {client}; decide manually.', {
+          client: setupClient.value,
+        })
+        : t('Safe setup is unavailable for this Ledgerbox installation.');
       return;
     }
     try {
       await api.copyText(data.setup_commands[setupClient.value]);
-      status.textContent = `${LABELS[setupClient.value]} setup command copied. Paste the single line into PowerShell.`;
+      status.textContent = t('{client} setup command copied. Paste the single line into '
+        + 'PowerShell.', { client: LABELS[setupClient.value] });
     } catch (error) {
-      status.textContent = error.message || 'Could not copy the setup command.';
+      status.textContent = error.message || t('Could not copy the setup command.');
     }
   }
 
@@ -298,15 +322,18 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
     if (!data?.policy.enabled || !data.policy.selected_client) return;
     try {
       await api.copyText(data.run_prompts[data.policy.selected_client]);
-      status.textContent = `${LABELS[data.policy.selected_client]} classification prompt copied.`;
+      status.textContent = t('{client} classification prompt copied.', {
+        client: LABELS[data.policy.selected_client],
+      });
     } catch (error) {
-      status.textContent = error.message || 'Could not copy the classification prompt.';
+      status.textContent = error.message || t('Could not copy the classification prompt.');
     }
   }
 
   async function savePolicy() {
     if (!acknowledge.input.checked) {
-      status.textContent = 'Confirm the provider data boundary before enabling classification.';
+      status.textContent = t('Confirm the provider data boundary before enabling '
+        + 'classification.');
       return;
     }
     try {
@@ -318,9 +345,11 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
         acknowledge_provider_data_policy: true,
       });
       render();
-      status.textContent = `${LABELS[data.policy.selected_client]} policy saved.`;
+      status.textContent = t('{client} policy saved.', {
+        client: LABELS[data.policy.selected_client],
+      });
     } catch (error) {
-      status.textContent = error.message || 'Could not save Agent settings.';
+      status.textContent = error.message || t('Could not save Agent settings.');
     }
   }
 
@@ -335,9 +364,10 @@ export function createAgentSidebar({ root, services, onNeedsClassification } = {
         acknowledge_provider_data_policy: false,
       });
       render();
-      status.textContent = 'Automatic Agent classification disabled. The MCP registration is unchanged.';
+      status.textContent = t('Automatic Agent classification disabled. The MCP '
+        + 'registration is unchanged.');
     } catch (error) {
-      status.textContent = error.message || 'Could not disable Agent classification.';
+      status.textContent = error.message || t('Could not disable Agent classification.');
     }
   }
 

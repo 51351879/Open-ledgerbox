@@ -12,13 +12,14 @@
 
 import { button, el } from './api.js';
 import { IN_FLIGHT } from './agent-contract.js';
+import { t } from './i18n.js';
 
 /** Whole minutes and seconds, because a run is minutes long and nobody counts ms. */
 function spoken(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return null;
   const whole = Math.round(seconds);
-  if (whole < 90) return `${whole}s`;
-  return `${Math.round(whole / 60)} min`;
+  if (whole < 90) return t('{count}s', { count: whole });
+  return t('{count} min', { count: Math.round(whole / 60) });
 }
 
 /** Seconds between two ISO stamps, or null when either is missing or unparsable. */
@@ -31,9 +32,9 @@ function secondsBetween(from, to) {
 
 export function createJobPanel({ onNeedsClassification, onClassifyNow, now = () => Date.now() }) {
   const node = el('section', 'agent-job');
-  node.appendChild(el('p', 'agent-job__label', 'Latest classification'));
+  node.appendChild(el('p', 'agent-job__label', t('Latest classification')));
 
-  const summary = el('p', 'agent-job__summary', 'No automatic classification run yet.');
+  const summary = el('p', 'agent-job__summary', t('No automatic classification run yet.'));
   summary.setAttribute('aria-live', 'polite');
   // A bar carries "how far along" at a glance; the text under it carries the
   // numbers the bar cannot honestly show, including what is only an estimate.
@@ -55,7 +56,11 @@ export function createJobPanel({ onNeedsClassification, onClassifyNow, now = () 
       onNeedsClassification();
     }
   });
-  const classifyNow = button('btn btn--quiet btn--compact', 'Classify now', () => onClassifyNow());
+  const classifyNow = button(
+    'btn btn--quiet btn--compact',
+    t('Classify now'),
+    () => onClassifyNow(),
+  );
   classifyNow.disabled = true;
 
   node.appendChild(summary);
@@ -74,59 +79,90 @@ export function createJobPanel({ onNeedsClassification, onClassifyNow, now = () 
     meter.hidden = false;
     meterFill.style.width = `${percent}%`;
     meter.setAttribute('aria-valuenow', String(percent));
-    meter.setAttribute('aria-label', `${done} of ${total} candidates classified`);
+    meter.setAttribute('aria-label', t('{done} of {total} candidates classified', {
+      done,
+      total,
+    }));
   }
 
   function renderMoving(batch) {
-    const rounds = batch.job_count === 1 ? 'round' : 'rounds';
+    // One whole sentence per count rather than a noun swapped into one: a
+    // language with no plural says both the same way.
     summary.textContent = batch.state === 'queued'
-      ? `Classification queued · ${batch.job_count} ${rounds}.`
-      : `Classifying now · round ${batch.job_count} · ${batch.submitted_count} submitted so far.`;
+      ? (batch.job_count === 1
+        ? t('Classification queued · 1 round.')
+        : t('Classification queued · {count} rounds.', { count: batch.job_count }))
+      : t('Classifying now · round {round} · {submitted} submitted so far.', {
+        round: batch.job_count,
+        submitted: batch.submitted_count,
+      });
     setMeter(batch.submitted_count, batch.candidate_count);
 
     const elapsed = secondsBetween(batch.started_at, new Date(now()).toISOString());
-    const parts = [`Round ${batch.job_count} of at most ${batch.max_rounds}`];
+    const parts = [t('Round {round} of at most {max}', {
+      round: batch.job_count,
+      max: batch.max_rounds,
+    })];
     if (elapsed !== null) {
-      parts.push(`running ${spoken(elapsed)}`);
+      parts.push(t('running {duration}', { duration: spoken(elapsed) }));
       // The per-round rate is measured, so it is stated. How many rounds are
       // still needed is not knowable -- yield falls off unevenly -- so the
       // remaining time is given as a ceiling and named as one.
       const perRound = elapsed / Math.max(1, batch.job_count);
       const ceiling = spoken(perRound * Math.max(0, batch.max_rounds - batch.job_count));
-      if (ceiling) parts.push(`up to ${ceiling} left if it uses every round`);
+      if (ceiling) {
+        parts.push(t('up to {duration} left if it uses every round', { duration: ceiling }));
+      }
     }
     progress.textContent = `${parts.join(' · ')}.`;
-    detail.textContent = 'This page is watching; it updates itself. You can leave it running.';
+    detail.textContent = t('This page is watching; it updates itself. You can leave it '
+      + 'running.');
   }
 
   function renderStopped(batch, omitted) {
     const candidate = Math.max(0, Number(batch.candidate_count) || 0);
-    const rounds = batch.job_count === 1 ? '1 round' : `${batch.job_count} rounds`;
+    const rounds = batch.job_count === 1
+      ? t('1 round')
+      : t('{count} rounds', { count: batch.job_count });
     // Submitted and applied stay separate: under review-first nothing is
     // applied, and one number standing for both would hide that.
     summary.textContent = batch.state === 'failed'
-      ? `Classification failed${batch.error_code ? ` (${batch.error_code})` : ''}.`
-      : `Finished · ${candidate} candidates · ${batch.submitted_count} submitted · `
-        + `${batch.applied_count} applied · ${omitted} omitted.`;
+      ? (batch.error_code
+        ? t('Classification failed ({code}).', { code: batch.error_code })
+        : t('Classification failed.'))
+      : t('Finished · {candidates} candidates · {submitted} submitted · {applied} applied '
+        + '· {omitted} omitted.', {
+        candidates: candidate,
+        submitted: batch.submitted_count,
+        applied: batch.applied_count,
+        omitted,
+      });
     setMeter(batch.submitted_count, candidate);
     const ran = secondsBetween(batch.started_at, batch.finished_at);
-    progress.textContent = `${rounds}${ran === null ? '' : ` in ${spoken(ran)}`}`
-      + (batch.failed_rounds
-        ? `, ${batch.failed_rounds} of them returned nothing`
-        : '')
-      + '.';
-    detail.textContent = `Ended ${batch.finished_at || 'unknown'}.`
-      + (batch.state !== 'failed' && batch.submitted_count === 0 && candidate > 0
-        ? ' The Agent examined every candidate and declined them all under its abstention'
-          + ' rules. These need a person: classify a few in Transactions and each answer'
-          + ' also claims its identical descriptors.'
-        : '')
-      + (batch.client_outcome && batch.client_outcome !== 'exited'
-        ? ` The client ended early (${batch.client_outcome}), so this is not a considered stopping point.`
-        : '')
-      + (batch.rounds_capped
-        ? ' It stopped at the round limit while still finding work, so asking again may find more.'
-        : '');
+    const took = ran === null
+      ? rounds
+      : t('{rounds} in {duration}', { rounds, duration: spoken(ran) });
+    const shown = batch.failed_rounds
+      ? t('{took}, {count} of them returned nothing', { took, count: batch.failed_rounds })
+      : took;
+    progress.textContent = `${shown}.`;
+    // Each addition is a sentence of its own, joined by the separator rather
+    // than carrying one: a normalised key loses a leading space.
+    const ended = [t('Ended {when}.', { when: batch.finished_at || t('unknown') })];
+    if (batch.state !== 'failed' && batch.submitted_count === 0 && candidate > 0) {
+      ended.push(t('The Agent examined every candidate and declined them all under its '
+        + 'abstention rules. These need a person: classify a few in Transactions and each '
+        + 'answer also claims its identical descriptors.'));
+    }
+    if (batch.client_outcome && batch.client_outcome !== 'exited') {
+      ended.push(t('The client ended early ({outcome}), so this is not a considered '
+        + 'stopping point.', { outcome: batch.client_outcome }));
+    }
+    if (batch.rounds_capped) {
+      ended.push(t('It stopped at the round limit while still finding work, so asking '
+        + 'again may find more.'));
+    }
+    detail.textContent = ended.join(' ');
   }
 
   /** Render one stretch and return how many transactions are left over now. */
@@ -134,7 +170,7 @@ export function createJobPanel({ onNeedsClassification, onClassifyNow, now = () 
     const moving = batch !== null && batch !== undefined && IN_FLIGHT.has(batch.state);
     const omitted = moving ? 0 : Math.max(0, Number(batch?.omitted_count) || 0);
     if (!batch) {
-      summary.textContent = 'No automatic classification run yet.';
+      summary.textContent = t('No automatic classification run yet.');
       detail.textContent = '';
       progress.textContent = '';
       meter.hidden = true;
@@ -144,7 +180,7 @@ export function createJobPanel({ onNeedsClassification, onClassifyNow, now = () 
       renderStopped(batch, omitted);
     }
     classifyNow.disabled = moving || !policy?.enabled || !policy?.selected_client;
-    needsLink.textContent = `Needs classification: ${omitted}`;
+    needsLink.textContent = t('Needs classification: {count}', { count: omitted });
     needsLink.hidden = omitted === 0;
     return omitted;
   }

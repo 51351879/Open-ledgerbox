@@ -84,10 +84,9 @@ export function createTriagePanel({ root, onChange = () => {}, services = defaul
     el(
       'p',
       'panel__note',
-      // Quotes `Possible transfer`, a route heading `triage-groups.js` still
-      // renders in English, so it has no dictionary entry yet: prose naming a
-      // heading in the other language sends the reader looking for something
-      // that is not on the page. `t()` is here so the entry is all that is left.
+      // Quotes `Possible transfer`, the first of the three route headings below.
+      // A dictionary may translate this note only while it also translates that
+      // heading, or the sentence names something the page does not.
       t(
         'A tool you ran locally sorted every currently unanswered row into three review '
           + 'routes. Possible transfer is not a transfer decision. Confirmed gaps and '

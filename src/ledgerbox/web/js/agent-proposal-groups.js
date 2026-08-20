@@ -6,6 +6,7 @@
 // this module only names the ids a person currently has checked.
 
 import { button, clear, el, formatMinor, option } from './api.js';
+import { t } from './i18n.js';
 
 export function pendingGroups(proposals) {
   const groups = new Map();
@@ -33,23 +34,29 @@ export function pendingGroups(proposals) {
 }
 
 export function impactCopy(categoryId, selected) {
-  const noun = selected === 1 ? 'transaction' : 'transactions';
+  // Whole sentences per number rather than a noun swapped into one: a
+  // language with no plural says both the same way, and a dictionary can
+  // answer for a sentence but not for half of one.
+  const lead = selected === 1
+    ? t('1 selected transaction.')
+    : t('{count} selected transactions.', { count: selected });
   if (categoryId === 'transfer') {
-    return `${selected} selected ${noun}. Transfer remains manual approval only; accepting `
-      + 'removes those amounts from the In and Out figures, not from the ledger.';
+    return `${lead} ${t('Transfer remains manual approval only; accepting removes those '
+      + 'amounts from the In and Out figures, not from the ledger.')}`;
   }
-  return `${selected} selected ${noun}. Accepting sets the current category to ${categoryId}. `
-    + 'Balances and statement lines do not change.';
+  // The category id is substituted, never looked up.
+  return `${lead} ${t('Accepting sets the current category to {category}. Balances and '
+    + 'statement lines do not change.', { category: categoryId })}`;
 }
 
 function decisionCopy(transaction) {
-  if (!transaction) return 'Current ledger row is unavailable.';
-  if (transaction.category_decided_by === 'none') return 'No current category.';
+  if (!transaction) return t('Current ledger row is unavailable.');
+  if (transaction.category_decided_by === 'none') return t('No current category.');
   const source = transaction.category_decided_by === 'override'
-    ? 'set by you'
-    : transaction.category_decided_by === 'agent' ? 'set by Agent'
-      : transaction.category_decided_by === 'learned' ? 'set by your earlier answer'
-        : 'set by a rule';
+    ? t('set by you')
+    : transaction.category_decided_by === 'agent' ? t('set by Agent')
+      : transaction.category_decided_by === 'learned' ? t('set by your earlier answer')
+        : t('set by a rule');
   return `${transaction.category_id || '—'} (${source})`;
 }
 
@@ -60,7 +67,7 @@ function currentRow(proposal, onSelection) {
   pick.type = 'checkbox';
   pick.checked = true;
   pick.dataset.txnId = proposal.txn_id;
-  pick.setAttribute('aria-label', `Include transaction ${proposal.txn_id}`);
+  pick.setAttribute('aria-label', t('Include transaction {id}', { id: proposal.txn_id }));
   pick.addEventListener('change', onSelection);
   row.appendChild(pick);
 
@@ -78,7 +85,7 @@ function currentRow(proposal, onSelection) {
     );
     facts.appendChild(first);
   } else {
-    facts.appendChild(el('span', 'proposal-row__line', 'Current ledger row unavailable'));
+    facts.appendChild(el('span', 'proposal-row__line', t('Current ledger row unavailable')));
   }
   facts.appendChild(el('span', 'proposal-row__current', decisionCopy(transaction)));
   row.appendChild(facts);
@@ -97,7 +104,7 @@ function categoryPicker(categories, suggested) {
     select.appendChild(option(category.id, `${category.id} · ${category.kind}`));
   }
   select.value = suggested;
-  select.setAttribute('aria-label', 'Category to apply to selected transactions');
+  select.setAttribute('aria-label', t('Category to apply to selected transactions'));
   return select;
 }
 
@@ -111,7 +118,7 @@ function renderGroup({ group, categories, onReview, onMessage }) {
   const title = el('h3', 'proposal-group__title', group.categoryId);
   head.appendChild(title);
   head.appendChild(
-    el('span', 'badge badge--pending', `${group.rows.length} pending`),
+    el('span', 'badge badge--pending', t('{count} pending', { count: group.rows.length })),
   );
   card.appendChild(head);
 
@@ -121,14 +128,15 @@ function renderGroup({ group, categories, onReview, onMessage }) {
   all.type = 'checkbox';
   all.checked = true;
   allLabel.appendChild(all);
-  allLabel.appendChild(document.createTextNode(' Include all in this group'));
+  // The separator stays outside the sentence; keys are whitespace-normalised.
+  allLabel.appendChild(document.createTextNode(` ${t('Include all in this group')}`));
   controls.appendChild(allLabel);
 
   const picker = categoryPicker(categories, group.categoryId);
   controls.appendChild(picker);
-  const accept = button('btn', 'Accept selected', () => apply('accept'));
+  const accept = button('btn', t('Accept selected'), () => apply('accept'));
   accept.dataset.action = 'accept';
-  const reject = button('btn btn--quiet', 'Reject selected', () => apply('reject'));
+  const reject = button('btn btn--quiet', t('Reject selected'), () => apply('reject'));
   reject.dataset.action = 'reject';
   controls.appendChild(accept);
   controls.appendChild(reject);
@@ -167,7 +175,7 @@ function renderGroup({ group, categories, onReview, onMessage }) {
   async function apply(action) {
     const txnIds = selectedIds();
     if (txnIds.length === 0) {
-      onMessage('Select at least one transaction in this group.', 'fail');
+      onMessage(t('Select at least one transaction in this group.'), 'fail');
       return;
     }
     setDisabled(busyNodes, true);
@@ -195,7 +203,11 @@ export function renderProposalHistory(host, proposals) {
   if (reviewed.length === 0) return;
   const details = el('details', 'proposal-history');
   details.appendChild(
-    el('summary', 'proposal-history__summary', `Reviewed decisions (${reviewed.length})`),
+    el(
+      'summary',
+      'proposal-history__summary',
+      t('Reviewed decisions ({count})', { count: reviewed.length }),
+    ),
   );
   const rows = el('div', 'proposal-history__rows');
   for (const proposal of reviewed) {
@@ -211,7 +223,11 @@ export function renderProposalHistory(host, proposals) {
       el('span', 'proposal-history__amount', transaction ? formatMinor(transaction.amount_minor) : '—'),
     );
     row.appendChild(
-      el('span', 'proposal-history__category', proposal.applied_category_id || 'No category applied'),
+      el(
+        'span',
+        'proposal-history__category',
+        proposal.applied_category_id || t('No category applied'),
+      ),
     );
     rows.appendChild(row);
   }
