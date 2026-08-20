@@ -9,6 +9,23 @@ narrative, written from what a user can see rather than from commits.
 
 ## 0.1.0a2 (unreleased)
 
+### Added
+
+- The interface can be read in Simplified Chinese. A language control in the
+  masthead switches it; the choice is remembered, and a build that does not
+  have the language you stored stays in English rather than half-translating
+  itself. The README has a Chinese edition too.
+- Nothing is guessed in either direction. A translation that is missing,
+  empty, or that drops a `{name}` the English sentence carries is not used:
+  the English is shown and the gap is reported to the console, because a page
+  saying `{count} transactions` or wearing an empty button is worse than one
+  left in English. Amounts, dates, category ids, wire values, file names and
+  commands are substituted into sentences, never looked up in them, so a
+  Chinese page still says `transfer` where the ledger stores `transfer`.
+- Four explanatory paragraphs stay in English on purpose. Each is broken up by
+  inline emphasis, so a dictionary would have to preserve English word order to
+  reassemble them, and it cannot. They are named in `locales/zh-CN.js`.
+
 ### Fixed
 
 - A data directory with a non-ASCII name -- `D:\test账本-data` -- was served
