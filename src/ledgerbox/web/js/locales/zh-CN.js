@@ -24,16 +24,17 @@
 //
 // **What is deliberately not here.** Three explanatory paragraphs -- the
 // hatched-slice note under the category chart, the bank-leg note under the
-// transaction table, and the archive note under the statement list -- quote
-// labels other modules still render in English (`(none)`, `0 transactions`).
-// Prose that points at an English label describes something the reader cannot
-// find, which is worse than a paragraph left in English. They stay untranslated
-// until the modules drawing those labels take `t()`, and `missingKeys()` names
-// them in the console meanwhile.
+// transaction table, and the archive note under the statement list. Each is
+// broken into several text nodes by an inline `<strong>`, so the sweep sees
+// fragments rather than a sentence, and a fragment translated on its own only
+// reads correctly if Chinese happens to put the emphasised words in the same
+// place English does. Word order is not a property a dictionary can preserve.
+// `missingKeys()` names the fragments in the console meanwhile.
 //
-// The same rule keeps sentences split across inline markup out of this file
-// unless every fragment still reads correctly in Chinese once joined. Word
-// order is not a property a dictionary can preserve.
+// This note used to give a different reason -- that they quoted labels other
+// modules still rendered in English. That rule is real and is why several
+// panel notes waited for the controls they name; those labels are translated
+// now and the notes went in with them. These three were never waiting on that.
 //
 // The `<noscript>` sentence is not here either, and cannot be: it is shown
 // exactly when JavaScript is off, and this dictionary is JavaScript. An entry
@@ -199,4 +200,96 @@ export const zhCN = {
   ['Runs on this machine only. No account, no telemetry, no outbound request: your statements '
     + 'never leave this computer.']:
     '只在这台机器上运行。无账号、无遥测、无对外请求：你的账单不会离开这台电脑。',
+  // What the page may claim about the ring under it. This is the module whose
+  // sentence has been published as a falsehood twice; a translation that makes
+  // any of it sound more complete than it is would be the third time.
+  'Nothing claimed these': '没有任何规则认领这些',
+  ['not a category — no rule claimed these lines and nobody overruled that. This is {share} of '
+    + 'spending lines; the percentage above is the share of spending amount, not the share of '
+    + 'lines.']:
+    '不是一个类别——没有规则认领这些行，也没有人推翻这一点。这是支出行数的 {share}；'
+    + '上面那个百分比是支出金额的占比，不是行数的占比。',
+  ['The hatched slice is not a category. It is the lines no rule claimed and nobody overruled, '
+    + 'drawn differently on purpose so it cannot be read as one more bucket beside the named '
+    + 'ones. Each row’s main percentage is its share of spending amount — of the whole until a '
+    + 'visual filter is active, then of visible spending; classification coverage by both '
+    + 'amount and line count is stated below the chart.']:
+    '斜纹那一块不是一个类别。它是没有规则认领、也没有人推翻的那些行，故意画成另一种样子，'
+    + '好让它不会被读成挨着那些有名字的桶的又一个桶。每一行的主百分比是它在支出金额中的占比——'
+    + '在没有启用可视筛选时是占整体，启用之后是占可见支出；'
+    + '按金额与按行数两种口径的分类覆盖率都写在图表下方。',
+  ['One colour per category, fixed by the category and not by its size, so a bucket keeps its '
+    + 'colour when you change the dates. Colour is a second way to find a slice and never the '
+    + 'only one: the rows below name every slice, including the ones too small to see.']:
+    '一个类别一种颜色，由类别本身决定而不是由它的大小决定，所以改变日期时一个桶仍然保持它的颜色。'
+    + '颜色是找到某一块的第二种方式，永远不是唯一的方式：下面的每一行都写出了每一块的名字，'
+    + '包括小到看不见的那些。',
+  ['Each row is a switch. Switching a bucket off removes its wedge and rebalances the remaining '
+    + 'visible buckets into a complete ring representing all visible spending. The crossed-out '
+    + 'row keeps its original whole-spend figures for reference.']:
+    '每一行都是一个开关。关掉一个桶会移除它的扇形，并把其余可见的桶重新配平成一个完整的圆环，'
+    + '代表全部可见支出。被划掉的那一行仍然保留它原本按整体支出算出的数字，供参考。',
+  'Share of total spent': '占总支出的比例',
+  'Share of visible spent': '占可见支出的比例',
+  'Share of spending lines': '占支出行数的比例',
+  'switched off': '已关闭',
+  'share not computable': '占比无法计算',
+  'Total spent': '总支出',
+  'over {count} spending line(s).': '分布在 {count} 条支出行上。',
+  // Quotes `Out`, the figure at the top of the page, in the same word the grid
+  // above uses for it.
+  ['The amount is the “Out” figure at the top of this page, broken down: the same measurement '
+    + 'of the same money, not a second one.']:
+    '这个金额就是本页顶部“流出”那个数字的拆解：同一笔钱的同一次计量，不是第二次计量。',
+  'Showing {drawn} of {whole} spent': '在 {whole} 支出中显示 {drawn}',
+  ['{count} bucket(s) are switched off in the list below. Their wedges are removed and the '
+    + 'remaining visible buckets are rebalanced into a complete ring; the ring represents all '
+    + 'visible spending. This visual filter does not change the whole {whole}, the ledger, or '
+    + 'the classification coverage below.']:
+    '下面的列表里有 {count} 个桶被关掉了。它们的扇形被移除，'
+    + '其余可见的桶被重新配平成一个完整的圆环；这个圆环代表全部可见支出。'
+    + '这个可视筛选不会改变整体的 {whole}、账本，或者下面的分类覆盖率。',
+  ['Every bucket is switched off, so the ring is empty and there is no visible spending share '
+    + 'to compute.']:
+    '每一个桶都被关掉了，所以圆环是空的，也没有可见支出占比可以计算。',
+  ['Nothing has been spent yet, so there is no total to divide and no share to compute.']:
+    '还没有任何支出，所以没有可以拆分的总额，也没有可以计算的占比。',
+  ['{count} bucket(s) are switched off in the list below. Turning them back on will not change '
+    + 'the figures, because there are none to change.']:
+    '下面的列表里有 {count} 个桶被关掉了。把它们重新打开不会改变这些数字，因为根本没有数字可改。',
+  'No spending to break down yet.': '还没有可以拆解的支出。',
+  'Show every bucket again': '重新显示每一个桶',
+  ['Classification coverage: there are no spending lines in this view.']:
+    '分类覆盖率：这个视图里没有任何支出行。',
+  ['Classification coverage: {classified} of {total} spending line(s) ({classifiedShare}) are '
+    + 'classified. The remaining {unclassified} line(s) ({unclassifiedShare}) are '
+    + 'unclassified.']:
+    '分类覆盖率：{total} 条支出行中有 {classified} 条（{classifiedShare}）已分类。'
+    + '其余 {unclassified} 条（{unclassifiedShare}）未分类。',
+  'Amount coverage is not computable because net spending is zero.':
+    '金额口径的覆盖率无法计算，因为净支出为零。',
+  ['By net spending amount, {classified} is classified and {unclassified} is unclassified. '
+    + 'Line share and amount share answer different questions and neither is an Agent accuracy '
+    + 'score.']:
+    '按净支出金额算，{classified} 已分类，{unclassified} 未分类。'
+    + '行数口径与金额口径回答的是不同的问题，两者都不是 Agent 的准确率分数。',
+  ['Donut chart dividing {total} of spending into {buckets} bucket(s): {named} category(ies) '
+    + 'and the lines nothing claimed. Every bucket is named, with its share and its amount, in '
+    + 'the list beside the chart.']:
+    '把 {total} 的支出分成 {buckets} 个桶的环形图：{named} 个类别，'
+    + '加上没有任何规则认领的那些行。每一个桶都在图表旁边的列表里有名字，并附有它的占比与金额。',
+  '{count} bucket(s) are switched off in that list and are not drawn,':
+    '那个列表里有 {count} 个桶被关掉了，没有被画出来，',
+  'so the ring is empty and there is no visible spending share to compute.':
+    '所以圆环是空的，也没有可见支出占比可以计算。',
+  ['so the remaining wedges form a complete ring showing {drawn}; their shares are recomputed '
+    + 'against that visible spending.']:
+    '所以其余的扇形组成一个完整的圆环，显示 {drawn}；它们的占比是按那部分可见支出重新算出来的。',
+  'The whole {total} and classification coverage are unchanged.':
+    '整体的 {total} 与分类覆盖率不变。',
+
+  // The two sentences a page says about its own transport, outside any panel.
+  'No answer from ledgerbox. Is the server still running?':
+    'ledgerbox 没有响应。服务器还在运行吗？',
+  'The local service did not answer.': '本地服务没有响应。',
 };

@@ -46,6 +46,7 @@ import { createStatementList } from './statements.js';
 import { createTransactionsPanel } from './transactions.js';
 import { createUploader } from './upload.js';
 import { applyStoredLanguage, wireLanguageControl } from './language.js';
+import { t } from './i18n.js';
 
 function node(id) {
   return document.getElementById(id);
@@ -104,7 +105,7 @@ function boot() {
       // nothing is answering there is nothing known about the ledger to say.
       if (!isOffline(error)) {
         statusNode.appendChild(
-          el('span', 'status__error', error.message || 'The local service did not answer.'),
+          el('span', 'status__error', error.message || t('The local service did not answer.')),
         );
       }
     }

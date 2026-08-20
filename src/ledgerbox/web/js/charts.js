@@ -32,6 +32,8 @@
 // is a sentence a person reads, and this codebase keeps those where they can be
 // read whole.
 
+import { t } from './i18n.js';
+
 /**
  * How many categorical steps `charts.css` actually defines.
  *
@@ -180,7 +182,7 @@ export function sharePercent(part, whole) {
  */
 export function percentText(pct) {
   if (pct === null) {
-    return 'share not computable';
+    return t('share not computable');
   }
   const size = Math.abs(pct);
   if (size === 0) {

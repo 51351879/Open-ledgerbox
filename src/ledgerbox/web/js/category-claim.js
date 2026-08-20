@@ -30,6 +30,7 @@
 
 import { formatMinor } from './api.js';
 import { percentText, sharePercent } from './charts.js';
+import { localized, t } from './i18n.js';
 
 // Every word this panel says, in one module. The claim functions below own the
 // sentence under the ring and the label on the figure; the rest is the legend's
@@ -37,53 +38,66 @@ import { percentText, sharePercent } from './charts.js';
 // line a second time. Splitting a panel's prose from its other prose would have
 // been a split by size rather than by job, and the job here is "what this panel
 // says".
-const COPY = {
+// Looked up as each sentence is read. **The separator between a pair of them
+// is at the reading site and not inside either one**: keys are normalised, and
+// English reads through the same lookup as every other language, so a leading
+// space or dash would be trimmed out of the key and off the page with it.
+// `paintTotal` renders these as adjacent inline spans, so losing one would
+// weld two sentences together in the one claim this file exists to keep true.
+const COPY = localized({
   // The wording the transaction table and the month filter already use for the
   // same fact, deliberately: one absence, one name for it.
   unclaimed: 'Nothing claimed these',
-  unclaimedAside: (lineShare) => 'not a category — no rule claimed these lines and nobody '
-    + `overruled that. This is ${lineShare} of spending lines; the percentage above is the `
-    + 'share of spending amount, not the share of lines.',
-  unclaimedKey: 'The hatched slice is not a category. It is the lines no rule claimed and nobody '
-    + 'overruled, drawn differently on purpose so it cannot be read as one more bucket beside the '
-    + 'named ones. Each row’s main percentage is its share of spending amount — of the whole '
-    + 'until a visual filter is active, then of visible spending; classification coverage by both '
-    + 'amount and line count is stated below the chart.',
+  unclaimedAside: (lineShare) => t('not a category — no rule claimed these lines and '
+    + 'nobody overruled that. This is {share} of spending lines; the percentage above is '
+    + 'the share of spending amount, not the share of lines.', { share: lineShare }),
+  unclaimedKey: 'The hatched slice is not a category. It is the lines no rule claimed and '
+    + 'nobody overruled, drawn differently on purpose so it cannot be read as one more '
+    + 'bucket beside the named ones. Each row’s main percentage is its share of spending '
+    + 'amount — of the whole until a visual filter is active, then of visible spending; '
+    + 'classification coverage by both amount and line count is stated below the chart.',
   // What this says has to be checkable by looking: a reader who narrows the
   // date range can see whether the colours moved. They do not, and saying they
   // are assigned by rank — which this said for the whole of M6, after the code
   // had stopped doing it — is a sentence a reader could catch the page out on.
   rampKey: 'One colour per category, fixed by the category and not by its size, so a bucket '
-    + 'keeps its colour when you change the dates. Colour is a second way to find a slice and '
-    + 'never the only one: the rows below name every slice, including the ones too small to see.',
-  toggleKey: 'Each row is a switch. Switching a bucket off removes its wedge and rebalances the '
-    + 'remaining visible buckets into a complete ring representing all visible spending. The '
-    + 'crossed-out row keeps its original whole-spend figures for reference.',
+    + 'keeps its colour when you change the dates. Colour is a second way to find a slice '
+    + 'and never the only one: the rows below name every slice, including the ones too '
+    + 'small to see.',
+  toggleKey: 'Each row is a switch. Switching a bucket off removes its wedge and rebalances '
+    + 'the remaining visible buckets into a complete ring representing all visible '
+    + 'spending. The crossed-out row keeps its original whole-spend figures for reference.',
   shareKey: 'Share of total spent',
   visibleShareKey: 'Share of visible spent',
   lineShareKey: 'Share of spending lines',
   hiddenTag: 'switched off',
   totalLead: 'Total spent',
-  totalLines: (count) => ` over ${count} spending line(s).`,
-  totalRest: ' The amount is the “Out” figure at the top of this page, broken down: the same '
+  // The functions carry their own separator and their sentence does not; see
+  // the note above. `localized()` passes a function through untouched.
+  totalLines: (count) => ` ${t('over {count} spending line(s).', { count })}`,
+  // `Out` is the figure at the top of the page and is worded here exactly as
+  // `analytics.js` names it.
+  totalRest: 'The amount is the “Out” figure at the top of this page, broken down: the same '
     + 'measurement of the same money, not a second one.',
-  filteredLead: (drawn, whole) => `Showing ${drawn} of ${whole} spent`,
-  filteredRest: (count, whole) => ` — ${count} bucket(s) are switched off in the list below. Their `
-    + 'wedges are removed and the remaining visible buckets are rebalanced into a complete ring; '
-    + 'the ring represents all visible spending. This visual filter does not change the whole '
-    + `${whole}, the ledger, or the classification coverage below.`,
-  filteredEmpty: ' Every bucket is switched off, so the ring is empty and there is no visible '
+  filteredLead: (drawn, whole) => t('Showing {drawn} of {whole} spent', { drawn, whole }),
+  filteredRest: (count, whole) => ` — ${t('{count} bucket(s) are switched off in the list '
+    + 'below. Their wedges are removed and the remaining visible buckets are rebalanced '
+    + 'into a complete ring; the ring represents all visible spending. This visual filter '
+    + 'does not change the whole {whole}, the ledger, or the classification coverage '
+    + 'below.', { count, whole })}`,
+  filteredEmpty: 'Every bucket is switched off, so the ring is empty and there is no visible '
     + 'spending share to compute.',
   noTotal: 'Nothing has been spent yet, so there is no total to divide and no share to compute.',
   // Said when there is nothing to divide *and* somebody has switched a bucket
   // off anyway. Rare, and it has to be reachable rather than tidy: the legend
   // is built and clickable before this branch is chosen, so a ledger whose
   // buckets cancel to nothing still has nine working switches on it.
-  noTotalHidden: (count) => ` ${count} bucket(s) are switched off in the list below. Turning `
-    + 'them back on will not change the figures, because there are none to change.',
+  noTotalHidden: (count) => ` ${t('{count} bucket(s) are switched off in the list below. '
+    + 'Turning them back on will not change the figures, because there are none to '
+    + 'change.', { count })}`,
   empty: 'No spending to break down yet.',
   restore: 'Show every bucket again',
-};
+});
 
 export const CLAIM_COPY = COPY;
 
@@ -103,7 +117,7 @@ export function coverageClaim(view) {
   const totalLines = Number.isInteger(view.txnCount) && view.txnCount > 0
     ? view.txnCount : 0;
   if (totalLines === 0) {
-    return 'Classification coverage: there are no spending lines in this view.';
+    return t('Classification coverage: there are no spending lines in this view.');
   }
 
   const rawUnclaimedLines = Number.isInteger(view.unclaimedTxnCount)
@@ -113,20 +127,31 @@ export function coverageClaim(view) {
   const classifiedLineShare = percentText(sharePercent(classifiedLines, totalLines));
   const unclaimedLineShare = percentText(sharePercent(unclaimedLines, totalLines));
 
-  const lineSentence = `Classification coverage: ${classifiedLines} of ${totalLines} spending `
-    + `line(s) (${classifiedLineShare}) are classified. The remaining ${unclaimedLines} line(s) `
-    + `(${unclaimedLineShare}) are unclassified.`;
+  const lineSentence = t('Classification coverage: {classified} of {total} spending line(s) '
+    + '({classifiedShare}) are classified. The remaining {unclassified} line(s) '
+    + '({unclassifiedShare}) are unclassified.', {
+    classified: classifiedLines,
+    total: totalLines,
+    classifiedShare: classifiedLineShare,
+    unclassified: unclaimedLines,
+    unclassifiedShare: unclaimedLineShare,
+  });
 
   if (!view.divisible || typeof view.unclaimedSpend !== 'number') {
-    return `${lineSentence} Amount coverage is not computable because net spending is zero.`;
+    return `${lineSentence} `
+      + t('Amount coverage is not computable because net spending is zero.');
   }
 
   const classifiedSpend = view.total - view.unclaimedSpend;
   const classifiedAmountShare = percentText(sharePercent(classifiedSpend, view.total));
   const unclaimedAmountShare = percentText(sharePercent(view.unclaimedSpend, view.total));
-  return `${lineSentence} By net spending amount, ${classifiedAmountShare} is classified and `
-    + `${unclaimedAmountShare} is unclassified. Line share and amount share answer different `
-    + 'questions and neither is an Agent accuracy score.';
+  return `${lineSentence} `
+    + t('By net spending amount, {classified} is classified and {unclassified} is '
+      + 'unclassified. Line share and amount share answer different questions and neither '
+      + 'is an Agent accuracy score.', {
+      classified: classifiedAmountShare,
+      unclassified: unclaimedAmountShare,
+    });
 }
 
 /**
@@ -170,7 +195,7 @@ export function totalClaim(view) {
     return {
       filtered: false,
       lead: `${COPY.totalLead} ${whole}`,
-      body: [COPY.totalLines(view.txnCount), COPY.totalRest, coverage],
+      body: [COPY.totalLines(view.txnCount), ` ${COPY.totalRest}`, coverage],
     };
   }
   return {
@@ -178,7 +203,7 @@ export function totalClaim(view) {
     lead: COPY.filteredLead(formatMinor(view.drawn), whole),
     body: [
       COPY.filteredRest(view.hidden, whole),
-      view.drawn === 0 ? COPY.filteredEmpty : '',
+      view.drawn === 0 ? ` ${COPY.filteredEmpty}` : '',
       coverage,
     ].filter(Boolean),
   };
@@ -196,17 +221,30 @@ export function donutLabel(view) {
   if (!view.divisible) {
     return view.hidden ? COPY.noTotal + COPY.noTotalHidden(view.hidden) : COPY.noTotal;
   }
-  const whole = `Donut chart dividing ${formatMinor(view.total)} of spending into `
-    + `${view.buckets} bucket(s): ${view.named} category(ies) and the lines nothing claimed. `
-    + 'Every bucket is named, with its share and its amount, in the list beside the chart.';
+  const whole = t('Donut chart dividing {total} of spending into {buckets} bucket(s): '
+    + '{named} category(ies) and the lines nothing claimed. Every bucket is named, with '
+    + 'its share and its amount, in the list beside the chart.', {
+    total: formatMinor(view.total),
+    buckets: view.buckets,
+    named: view.named,
+  });
   if (!view.hidden) {
     return `${whole} ${coverageClaim(view)}`;
   }
-  return `${whole} ${view.hidden} bucket(s) are switched off in that list and are not drawn, `
-    + (view.drawn === 0
-      ? 'so the ring is empty and there is no visible spending share to compute. '
-      : `so the remaining wedges form a complete ring showing ${formatMinor(view.drawn)}; their `
-        + 'shares are recomputed against that visible spending. ')
-    + `The whole ${formatMinor(view.total)} and classification coverage are unchanged. `
-    + coverageClaim(view);
+  // One sentence per fact, joined by the separator rather than each carrying
+  // one: a normalised key loses a trailing space as surely as a leading one.
+  return [
+    whole,
+    t('{count} bucket(s) are switched off in that list and are not drawn,', {
+      count: view.hidden,
+    }),
+    view.drawn === 0
+      ? t('so the ring is empty and there is no visible spending share to compute.')
+      : t('so the remaining wedges form a complete ring showing {drawn}; their shares are '
+        + 'recomputed against that visible spending.', { drawn: formatMinor(view.drawn) }),
+    t('The whole {total} and classification coverage are unchanged.', {
+      total: formatMinor(view.total),
+    }),
+    coverageClaim(view),
+  ].join(' ');
 }

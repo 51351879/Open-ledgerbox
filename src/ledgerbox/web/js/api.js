@@ -11,6 +11,7 @@
 // string containing a tag. Nothing in this page parses a string into nodes.
 
 import { report } from './connection.js';
+import { t } from './i18n.js';
 
 const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
@@ -106,7 +107,11 @@ export async function request(path, init) {
     // panel has to remember to tell it anything. A status the server chose is
     // an answer and counts as connected, however unwelcome it is.
     report(false);
-    throw new ApiError(0, 'No answer from ledgerbox. Is the server still running?', null);
+    throw new ApiError(
+      0,
+      t('No answer from ledgerbox. Is the server still running?'),
+      null,
+    );
   }
   report(true);
 
