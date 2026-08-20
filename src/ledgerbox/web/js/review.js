@@ -21,11 +21,15 @@ import {
   resolveReviewItem,
 } from './api.js';
 import { CONNECTION_COPY } from './connection.js';
+import { t } from './i18n.js';
 
 // Deep enough for the nested payloads the reconciler emits, shallow enough that
 // a pathological object cannot lock the page up building nodes.
 const MAX_DETAIL_DEPTH = 3;
 
+// Looked up where they are read: this table is built at import time and
+// `main.js` chooses the language afterwards. A severity this page does not
+// know is shown as the wire value it is.
 const SEVERITY_LABEL = { block: 'Blocking', warn: 'Warning' };
 
 function valueNode(key, value, depth) {
@@ -39,7 +43,7 @@ function valueNode(key, value, depth) {
     return el('span', 'num', String(value));
   }
   if (typeof value === 'boolean') {
-    return el('span', '', value ? 'yes' : 'no');
+    return el('span', '', value ? t('yes') : t('no'));
   }
   if (Array.isArray(value)) {
     if (depth >= MAX_DETAIL_DEPTH) {
@@ -85,13 +89,14 @@ export function detailList(detail, depth) {
 
 function itemHead(item, severity) {
   const head = el('div', 'item__head');
-  head.appendChild(el('span', `badge badge--${severity}`, SEVERITY_LABEL[severity] || severity));
-  head.appendChild(el('code', 'item__check', item.check_id || 'unknown check'));
+  const named = SEVERITY_LABEL[severity];
+  head.appendChild(el('span', `badge badge--${severity}`, named ? t(named) : severity));
+  head.appendChild(el('code', 'item__check', item.check_id || t('unknown check')));
   if (item.statement_month) {
     head.appendChild(el('span', 'item__month', item.statement_month));
   } else {
     // No month means the layout was refused before a period could be read.
-    head.appendChild(el('span', 'item__month muted', 'period unread'));
+    head.appendChild(el('span', 'item__month muted', t('period unread')));
   }
   if (item.status && item.status !== 'open') {
     head.appendChild(el('span', 'badge badge--quiet', item.status));
@@ -102,10 +107,10 @@ function itemHead(item, severity) {
 function itemStamps(item) {
   const parts = [];
   if (item.created_at) {
-    parts.push(`Queued ${item.created_at}`);
+    parts.push(t('Queued {when}', { when: item.created_at }));
   }
   if (item.resolved_at) {
-    parts.push(`Closed ${item.resolved_at}`);
+    parts.push(t('Closed {when}', { when: item.resolved_at }));
   }
   return parts.length > 0 ? el('p', 'item__stamp', parts.join(' · ')) : null;
 }
@@ -169,17 +174,19 @@ function actionsNode(item, onDone) {
         el(
           'p',
           'notice__text muted',
-          'The statement stays archived. Fixing the parser and re-ingesting the kept '
-            + 'bytes is the only route into the ledger.',
+          t(
+            'The statement stays archived. Fixing the parser and re-ingesting the kept '
+              + 'bytes is the only route into the ledger.',
+          ),
         ),
       );
       const row = el('div', 'notice__actions');
       row.appendChild(
-        button('btn btn--danger', 'Dismiss anyway', () => {
+        button('btn btn--danger', t('Dismiss anyway'), () => {
           send({ action: 'dismiss', acknowledge_unbooked: true });
         }),
       );
-      row.appendChild(button('btn btn--quiet', 'Keep it open', () => ui.reset()));
+      row.appendChild(button('btn btn--quiet', t('Keep it open'), () => ui.reset()));
       notice.appendChild(row);
       notice.hidden = false;
     },
@@ -205,14 +212,14 @@ function actionsNode(item, onDone) {
       if (askAgain) {
         ui.confirm(error.message);
       } else {
-        ui.fail(error.message || 'The item could not be updated.');
+        ui.fail(error.message || t('The item could not be updated.'));
       }
     }
   }
 
-  actions.appendChild(button('btn', 'Resolve', () => send({ action: 'resolve' })));
+  actions.appendChild(button('btn', t('Resolve'), () => send({ action: 'resolve' })));
   actions.appendChild(
-    button('btn btn--quiet', 'Dismiss', () => send({ action: 'dismiss' })),
+    button('btn btn--quiet', t('Dismiss'), () => send({ action: 'dismiss' })),
   );
   wrap.appendChild(actions);
   wrap.appendChild(notice);
@@ -244,7 +251,10 @@ export function createReviewQueue(options) {
   const panel = container.closest('.panel');
   const panelHead = panel ? panel.querySelector('.panel__head') : null;
   if (panelHead && panelHead.parentNode) {
-    panelHead.parentNode.insertBefore(el('p', 'panel__note', PANEL_NOTE), panelHead.nextSibling);
+    panelHead.parentNode.insertBefore(
+      el('p', 'panel__note', t(PANEL_NOTE)),
+      panelHead.nextSibling,
+    );
   }
   const countsNode = options.countsNode;
   const onChange = options.onChange;
@@ -260,10 +270,18 @@ export function createReviewQueue(options) {
     const blocking = data.open_block || 0;
     const warning = data.open_warn || 0;
     countsNode.appendChild(
-      el('span', blocking > 0 ? 'count count--block' : 'count', `${blocking} blocking`),
+      el(
+        'span',
+        blocking > 0 ? 'count count--block' : 'count',
+        t('{count} blocking', { count: blocking }),
+      ),
     );
     countsNode.appendChild(
-      el('span', warning > 0 ? 'count count--warn' : 'count', `${warning} warning`),
+      el(
+        'span',
+        warning > 0 ? 'count count--warn' : 'count',
+        t('{count} warning', { count: warning }),
+      ),
     );
   }
 
@@ -279,13 +297,16 @@ export function createReviewQueue(options) {
     const items = data.items || [];
     if (items.length === 0) {
       const empty = el('p', 'empty');
-      empty.appendChild(el('strong', '', 'Nothing is waiting on you.'));
+      empty.appendChild(el('strong', '', t('Nothing is waiting on you.')));
+      // The separator between the two sentences is here rather than inside the
+      // second: keys are normalised, so a leading space would be trimmed out of
+      // the key and off the page with it.
       empty.appendChild(
         el(
           'span',
           '',
-          ' Every statement in the ledger passed its own printed totals. Anything that '
-            + 'did not would be listed here, unbooked.',
+          ` ${t('Every statement in the ledger passed its own printed totals. Anything that '
+            + 'did not would be listed here, unbooked.')}`,
         ),
       );
       container.appendChild(empty);
@@ -296,10 +317,10 @@ export function createReviewQueue(options) {
     const blocking = items.filter((item) => item.severity === 'block');
     const warning = items.filter((item) => item.severity !== 'block');
     if (blocking.length > 0) {
-      container.appendChild(groupNode('Blocking — nothing was booked', blocking, done));
+      container.appendChild(groupNode(t('Blocking — nothing was booked'), blocking, done));
     }
     if (warning.length > 0) {
-      container.appendChild(groupNode('Warnings', warning, done));
+      container.appendChild(groupNode(t('Warnings'), warning, done));
     }
   }
 
@@ -316,7 +337,7 @@ export function createReviewQueue(options) {
       container.appendChild(el(
         'p',
         offline ? 'empty' : 'empty empty--fail',
-        offline ? CONNECTION_COPY.panel : (error.message || 'The queue could not be read.'),
+        offline ? CONNECTION_COPY.panel : (error.message || t('The queue could not be read.')),
       ));
     } finally {
       container.removeAttribute('aria-busy');

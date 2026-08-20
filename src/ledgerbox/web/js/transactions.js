@@ -29,6 +29,7 @@
 
 import { clear, el, fetchTransactions, formatMinor, button, isOffline } from './api.js';
 import { CONNECTION_COPY } from './connection.js';
+import { localized, t } from './i18n.js';
 import { createBulkBar } from './transaction-bulk.js';
 import { createFilters } from './transaction-filters.js';
 import { createRow, headerRow } from './transaction-row.js';
@@ -36,12 +37,14 @@ import { transactionResultStatus } from './transaction-status.js';
 
 export { transactionResultStatus } from './transaction-status.js';
 
-const COPY = {
+// Looked up as read. The space between a pair of these is at the reading site:
+// keys are normalised, so a leading one would be trimmed off the page with it.
+const COPY = localized({
   nothingYet: 'No transactions yet.',
-  nothingYetRest: ' A statement is booked only if it reconciles against the totals printed on '
+  nothingYetRest: 'A statement is booked only if it reconciles against the totals printed on '
     + 'it; anything that did not is in the list below, archived and unbooked.',
   noMatch: 'No transaction matches this filter.',
-  noMatchRest: ' Nothing has been deleted — changing or clearing a control above brings the '
+  noMatchRest: 'Nothing has been deleted — changing or clearing a control above brings the '
     + 'rows back.',
   refusedMonth: 'A statement that was refused has no transactions at all, so filtering to its '
     + 'month correctly shows none.',
@@ -49,10 +52,12 @@ const COPY = {
   listFailed: 'The transactions could not be read.',
   legend: 'Measured on this account’s own leg: what the matched lines did to the balance, '
     + 'transfers included.',
-};
+});
 
 // The three figures this table reports, named so that not one of them can be
-// read as the same quantity as the In / Out / Net / Balance at the top.
+// read as the same quantity as the In / Out / Net / Balance at the top. The
+// names are looked up in `renderTotals`: translated here, in an array built at
+// import time, they would stay English for the life of the page.
 const FIGURES = [
   ['Bank leg in', 'bank_in_minor'],
   ['Bank leg out', 'bank_out_minor'],
@@ -176,9 +181,10 @@ export function createTransactionsPanel(options) {
     if (!data) {
       return;
     }
-    countsNode.appendChild(el('span', 'count', `${data.totals.matched} line(s) match`));
+    const matched = data.totals.matched;
+    countsNode.appendChild(el('span', 'count', t('{count} line(s) match', { count: matched })));
     if (filters.isFiltered()) {
-      countsNode.appendChild(el('span', '', 'filtered'));
+      countsNode.appendChild(el('span', '', t('filtered')));
     }
   }
 
@@ -186,12 +192,12 @@ export function createTransactionsPanel(options) {
     clear(totalsNode);
     const grid = el('div', 'txn-figures');
     for (const [label, key] of FIGURES) {
-      grid.appendChild(figureNode(label, formatMinor(data.totals[key])));
+      grid.appendChild(figureNode(t(label), formatMinor(data.totals[key])));
     }
     totalsNode.appendChild(grid);
     totalsNode.appendChild(el('p', 'txn-legend muted', COPY.legend));
-    // The server's own sentence over the table, verbatim. It names the leg it
-    // measured on and says the figures at the top are a different measurement.
+    // The server's own sentence over the table, verbatim: the service reporting
+    // what it measured, not this page's wording to translate.
     if (data.summary) {
       totalsNode.appendChild(el('p', 'txn-summary', data.summary));
     }
@@ -207,11 +213,11 @@ export function createTransactionsPanel(options) {
     }
     if (!filters.isFiltered()) {
       box.appendChild(el('strong', '', COPY.nothingYet));
-      box.appendChild(el('span', '', COPY.nothingYetRest));
+      box.appendChild(el('span', '', ` ${COPY.nothingYetRest}`));
       return box;
     }
     box.appendChild(el('strong', '', COPY.noMatch));
-    box.appendChild(el('span', '', COPY.noMatchRest));
+    box.appendChild(el('span', '', ` ${COPY.noMatchRest}`));
     if (filters.monthChosen()) {
       box.appendChild(el('span', '', ` ${COPY.refusedMonth}`));
     }
@@ -279,11 +285,12 @@ export function createTransactionsPanel(options) {
     clear(pagerNode);
     const matched = data.totals.matched;
     const shown = data.items.length;
+    const first = data.offset + 1;
     const range = shown > 0
-      ? `Showing ${data.offset + 1}–${data.offset + shown} of ${matched}`
-      : `Showing none of ${matched}`;
-    const previous = button('btn btn--quiet', 'Previous', () => step(-1));
-    const next = button('btn btn--quiet', 'Next', () => step(1));
+      ? t('Showing {first}–{last} of {matched}', { first, last: data.offset + shown, matched })
+      : t('Showing none of {matched}', { matched });
+    const previous = button('btn btn--quiet', t('Previous'), () => step(-1));
+    const next = button('btn btn--quiet', t('Next'), () => step(1));
     previous.disabled = data.offset <= 0;
     next.disabled = data.offset + data.limit >= matched;
     pagerNode.appendChild(previous);
@@ -326,8 +333,8 @@ export function createTransactionsPanel(options) {
     clear(rowsNode);
     rowsNode.appendChild(el('p', offline ? 'empty' : 'empty empty--fail', message));
     announce(offline
-      ? 'Transaction results unavailable while ledgerbox is not answering.'
-      : 'Transaction results could not be updated.');
+      ? t('Transaction results unavailable while ledgerbox is not answering.')
+      : t('Transaction results could not be updated.'));
   }
 
   /** One page, from one request. Called by every control on the panel. */

@@ -10,8 +10,13 @@
 // bytes are archived, nothing was booked, and the reason is printed in full.
 
 import { ApiError, clear, el, uploadStatement } from './api.js';
+import { t } from './i18n.js';
 import { reviewItemNode } from './review.js';
 
+// A nested table, so `localized()` is no use here: it looks up strings one
+// level down and would half-translate this one, leaving a `tone` that is a
+// class name looking like something it could touch. The four labels are
+// looked up where they are read, and the `tone`s are never looked up at all.
 const STATUS_META = {
   imported: { tone: 'ok', label: 'Imported' },
   duplicate: { tone: 'neutral', label: 'Already imported' },
@@ -37,16 +42,20 @@ function cardHead(name, badgeClass, badgeLabel) {
 }
 
 function importedBody(card, result) {
-  const pairs = [['Booked', `${result.booked} transaction(s)`]];
-  pairs.push(['Month', result.statement_month || 'not stated']);
+  const pairs = [[t('Booked'), t('{count} transaction(s)', { count: result.booked })]];
+  pairs.push([t('Month'), result.statement_month || t('not stated')]);
   if (result.skipped_duplicates > 0) {
-    pairs.push(['Skipped as duplicates', `${result.skipped_duplicates} transaction(s)`]);
+    pairs.push([
+      t('Skipped as duplicates'),
+      t('{count} transaction(s)', { count: result.skipped_duplicates }),
+    ]);
   }
   if (result.verdict) {
     // Shown even on success, and marked when it is not a clean `ok`: an import
     // whose verdict is UNVERIFIED is exactly the thing this project must not
     // round off to "fine" because the card around it is green.
-    pairs.push(['Verdict', result.verdict, result.verdict === 'ok' ? '' : 'flag-warn']);
+    // The verdict itself is a wire value and is shown exactly as it arrived.
+    pairs.push([t('Verdict'), result.verdict, result.verdict === 'ok' ? '' : 'flag-warn']);
   }
   card.appendChild(factsNode(pairs));
 }
@@ -56,13 +65,15 @@ function needsReviewBody(card, result) {
     el(
       'p',
       'card__note',
-      'The file is archived and nothing was booked. Every reason is below, and each '
-        + 'one is waiting in the review queue.',
+      t(
+        'The file is archived and nothing was booked. Every reason is below, and each '
+          + 'one is waiting in the review queue.',
+      ),
     ),
   );
   const items = result.review || [];
   if (items.length === 0) {
-    card.appendChild(el('p', 'muted', 'No detail was returned with this refusal.'));
+    card.appendChild(el('p', 'muted', t('No detail was returned with this refusal.')));
     return;
   }
   const holder = el('div', 'card__review');
@@ -75,12 +86,14 @@ function needsReviewBody(card, result) {
 }
 
 function renderResult(card, fallbackName, result) {
-  const meta = STATUS_META[result.status] || { tone: 'neutral', label: result.status };
-  card.className = `card card--${meta.tone}`;
+  const meta = STATUS_META[result.status];
+  const tone = meta ? meta.tone : 'neutral';
+  // A status this page does not know is shown as it arrived: it is a wire
+  // value, and inventing a reading for it is the guess this project refuses.
+  const label = meta ? t(meta.label) : result.status;
+  card.className = `card card--${tone}`;
   clear(card);
-  card.appendChild(
-    cardHead(result.filename || fallbackName, `badge badge--${meta.tone}`, meta.label),
-  );
+  card.appendChild(cardHead(result.filename || fallbackName, `badge badge--${tone}`, label));
   card.appendChild(el('p', 'card__summary', result.summary || ''));
 
   if (result.status === 'imported') {
@@ -90,15 +103,17 @@ function renderResult(card, fallbackName, result) {
       el(
         'p',
         'card__note',
-        'These exact bytes were already archived, so there was nothing to do. '
-          + 'Re-uploading a statement is always safe.',
+        t(
+          'These exact bytes were already archived, so there was nothing to do. '
+            + 'Re-uploading a statement is always safe.',
+        ),
       ),
     );
   } else if (result.status === 'needs_review') {
     needsReviewBody(card, result);
   } else if (result.status === 'failed') {
     card.appendChild(
-      el('p', 'card__error', result.error || 'The file could not be read at all.'),
+      el('p', 'card__error', result.error || t('The file could not be read at all.')),
     );
   }
 }
@@ -106,11 +121,15 @@ function renderResult(card, fallbackName, result) {
 function renderRejection(card, name, error) {
   card.className = 'card card--fail';
   clear(card);
-  const label = error instanceof ApiError && error.status === 0 ? 'No answer' : 'Rejected';
+  const label = error instanceof ApiError && error.status === 0
+    ? t('No answer')
+    : t('Rejected');
   card.appendChild(cardHead(name, 'badge badge--fail', label));
-  card.appendChild(el('p', 'card__error', error.message || 'The upload was refused.'));
+  card.appendChild(el('p', 'card__error', error.message || t('The upload was refused.')));
   if (error instanceof ApiError && error.status > 0) {
-    card.appendChild(el('p', 'card__note muted', `Server status ${error.status}.`));
+    card.appendChild(
+      el('p', 'card__note muted', t('Server status {status}.', { status: error.status })),
+    );
   }
 }
 
@@ -130,7 +149,7 @@ export function createUploader(options) {
   const overlay = el('div', 'drop-overlay');
   overlay.id = 'drop-overlay';
   overlay.hidden = true;
-  overlay.appendChild(el('p', 'drop-overlay__text', 'Release to upload'));
+  overlay.appendChild(el('p', 'drop-overlay__text', t('Release to upload')));
   document.body.insertBefore(overlay, document.body.firstChild);
   const fileInput = options.fileInput;
   const onSettled = options.onSettled;
@@ -142,8 +161,8 @@ export function createUploader(options) {
 
   async function sendOne(file) {
     const card = el('article', 'card card--pending');
-    card.appendChild(cardHead(file.name, 'badge badge--pending', 'Uploading'));
-    card.appendChild(el('p', 'card__summary', 'Reconciling before anything is booked…'));
+    card.appendChild(cardHead(file.name, 'badge badge--pending', t('Uploading')));
+    card.appendChild(el('p', 'card__summary', t('Reconciling before anything is booked…')));
     results.prepend(card);
     try {
       const result = await uploadStatement(file);

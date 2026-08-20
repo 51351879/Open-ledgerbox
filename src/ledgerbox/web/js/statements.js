@@ -36,6 +36,7 @@
 
 import { button, clear, el, fetchStatements, isOffline, join } from './api.js';
 import { CONNECTION_COPY } from './connection.js';
+import { localized, t } from './i18n.js';
 import { deleteControl } from './deletion-plan.js';
 
 // Ten, and the panel is shut, because this list is a place you go to find one
@@ -47,49 +48,55 @@ const PAGE_SIZE = 10;
 // alike: the line must not be stronger than the evidence behind it. The ones the
 // confirmation prompt uses live next to the code that renders it, in
 // `deletion-plan.js`.
-const COPY = {
+//
+// Looked up as each is read. The space between a pair of them is at the reading
+// site and not inside either one: keys are normalised, so a leading space would
+// be trimmed out of the key and off the page with it.
+const COPY = localized({
   unbooked: 'In the archive, not in the ledger. None of its transactions were booked, so '
     + 'nothing on this page counts them. Fixing the parser and re-ingesting these same bytes '
     + 'is the way in; deleting is the way out.',
   deleted: 'The statement was deleted.',
   listFailed: 'The statement list could not be read.',
   emptyLead: 'No statements yet.',
-  emptyRest: ' Anything dropped above is listed here, archived either way — and booked only if '
+  emptyRest: 'Anything dropped above is listed here, archived either way — and booked only if '
     + 'it reconciles against the totals printed on it.',
   noMatch: 'No statement matches this search.',
   // An empty list with no explanation reads as data loss, and this one is one
   // keystroke away from a list of a person's own bank statements. It says what
   // undoes it.
-  noMatchRest: ' Nothing has been deleted and nothing has changed — emptying the search box '
+  noMatchRest: 'Nothing has been deleted and nothing has changed — emptying the search box '
     + 'above brings the whole list back.',
-};
+});
 
 function headNode(statement, unbooked) {
   const head = el('div', 'stmt__head');
-  head.appendChild(el('span', 'stmt__month', statement.statement_month || 'month unread'));
+  head.appendChild(el('span', 'stmt__month', statement.statement_month || t('month unread')));
   // No period means the layout was refused before one could be read.
   head.appendChild(el('span', 'stmt__period', statement.period_start && statement.period_end
-    ? `${statement.period_start} → ${statement.period_end}` : 'period unread'));
+    ? `${statement.period_start} → ${statement.period_end}` : t('period unread')));
   if (unbooked) {
-    head.appendChild(el('span', 'badge badge--block', 'Not booked'));
+    head.appendChild(el('span', 'badge badge--block', t('Not booked')));
   }
   return head;
 }
 
 function factsText(statement) {
-  const parts = [statement.institution || 'institution not stated'];
-  parts.push(`${statement.txn_count || 0} transaction(s)`);
+  const parts = [statement.institution || t('institution not stated')];
+  parts.push(t('{count} transaction(s)', { count: statement.txn_count || 0 }));
   // Queue depth appears only when it is not zero: a line reading "0 blocking" on every row is
-  // a line nobody reads on the row that says something else.
-  const depth = [[statement.open_block, 'blocking'], [statement.open_warn, 'warning(s)']];
-  for (const [count, label] of depth) {
-    if (count > 0) {
-      parts.push(`${count} ${label} in the queue`);
-    }
+  // a line nobody reads on the row that says something else. Two whole
+  // sentences rather than a word dropped into one: a severity is not a noun a
+  // dictionary can decline on this sentence's behalf.
+  if (statement.open_block > 0) {
+    parts.push(t('{count} blocking in the queue', { count: statement.open_block }));
   }
-  parts.push(`${(statement.byte_len || 0).toLocaleString('en-US')} bytes`);
+  if (statement.open_warn > 0) {
+    parts.push(t('{count} warning(s) in the queue', { count: statement.open_warn }));
+  }
+  parts.push(t('{bytes} bytes', { bytes: (statement.byte_len || 0).toLocaleString('en-US') }));
   if (statement.ingested_at) {
-    parts.push(`ingested ${statement.ingested_at}`);
+    parts.push(t('ingested {when}', { when: statement.ingested_at }));
   }
   return parts.join(' · ');
 }
@@ -120,8 +127,11 @@ function receiptNode(result, dismiss) {
   const box = el('div', left.length > 0 ? 'notice notice--fail' : 'notice');
   box.appendChild(el('p', 'notice__text', result.summary || COPY.deleted));
   if (left.length > 0) {
-    const lead = `${left.length} file(s) could not be removed from disk. `
-      + '`ledgerbox doctor` reports them, and exits non-zero, until they are gone:';
+    const lead = t(
+      '{count} file(s) could not be removed from disk. `ledgerbox doctor` reports them, '
+        + 'and exits non-zero, until they are gone:',
+      { count: left.length },
+    );
     box.appendChild(el('p', 'notice__text', lead));
     const list = el('ul', 'plan__items');
     for (const entry of left) {
@@ -129,7 +139,9 @@ function receiptNode(result, dismiss) {
     }
     box.appendChild(list);
   }
-  box.appendChild(join(el('div', 'notice__actions'), button('btn btn--quiet', 'Dismiss', dismiss)));
+  box.appendChild(
+    join(el('div', 'notice__actions'), button('btn btn--quiet', t('Dismiss'), dismiss)),
+  );
   return box;
 }
 
@@ -212,9 +224,13 @@ export function createStatementList(options) {
       return;
     }
     const unbooked = rows.filter((row) => (row.txn_count || 0) === 0).length;
-    countsNode.appendChild(el('span', 'count', `${rows.length} statement(s)`));
+    countsNode.appendChild(
+      el('span', 'count', t('{count} statement(s)', { count: rows.length })),
+    );
     if (unbooked > 0) {
-      countsNode.appendChild(el('span', 'count count--block', `${unbooked} not booked`));
+      countsNode.appendChild(
+        el('span', 'count count--block', t('{count} not booked', { count: unbooked })),
+      );
     }
   }
 
@@ -228,7 +244,7 @@ export function createStatementList(options) {
     const missed = !failure && all.length > 0 && matched === 0;
     noticeNode.hidden = !missed;
     if (missed) {
-      join(noticeNode, el('strong', '', COPY.noMatch), COPY.noMatchRest);
+      join(noticeNode, el('strong', '', COPY.noMatch), ` ${COPY.noMatchRest}`);
     }
   }
 
@@ -240,17 +256,21 @@ export function createStatementList(options) {
     if (failure || matched <= PAGE_SIZE) {
       return;
     }
-    const previous = button('btn btn--quiet', 'Previous', () => step(-1));
-    const next = button('btn btn--quiet', 'Next', () => step(1));
+    const previous = button('btn btn--quiet', t('Previous'), () => step(-1));
+    const next = button('btn btn--quiet', t('Next'), () => step(1));
     previous.disabled = start <= 0;
     next.disabled = start + shown >= matched;
     // "of 4 matched, 13 in all" rather than a bare "of 4": while a search is on,
     // the number beside the arrows is not the number in the summary above, and
     // saying both is cheaper than letting a reader discover that.
-    const range = `Showing ${start + 1}–${start + shown} of ${matched}`;
+    const range = t('Showing {first}–{last} of {matched}', {
+      first: start + 1,
+      last: start + shown,
+      matched,
+    });
     pagerNode.appendChild(previous);
     pagerNode.appendChild(el('span', 'pager__range',
-      needle() ? `${range} matched, ${all.length} in all` : range));
+      needle() ? t('{range} matched, {total} in all', { range, total: all.length }) : range));
     pagerNode.appendChild(next);
   }
 
@@ -288,7 +308,7 @@ export function createStatementList(options) {
     if (all.length === 0) {
       // An absence, not an error. On a fresh install this is the ordinary state.
       const empty = el('p', 'empty');
-      container.appendChild(join(empty, el('strong', '', COPY.emptyLead), COPY.emptyRest));
+      container.appendChild(join(empty, el('strong', '', COPY.emptyLead), ` ${COPY.emptyRest}`));
       return;
     }
     for (const row of shown) {

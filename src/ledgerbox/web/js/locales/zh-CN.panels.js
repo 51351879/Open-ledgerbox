@@ -127,4 +127,96 @@ export const zhCNPanels = {
     + 'a licensed professional rather than a page on your own machine.']:
     '本面板是一般性信息。对于上面列表中的任何一项，诚实的建议是找一个有执业资质的专业人士，'
     + '而不是你自己机器上的一个页面。',
+  // The drop zone and its result cards. `imported`, `duplicate`, `needs_review`
+  // and `failed` are wire values; only the four labels this page writes for
+  // them are here, and a status the page does not know is shown as it arrived.
+  'Release to upload': '松开即可上传',
+  Uploading: '上传中',
+  'Reconciling before anything is booked…': '正在对账，之后才会有内容入账…',
+  Imported: '已导入',
+  'Already imported': '此前已导入',
+  'Needs review': '需要人工查看',
+  'Could not read': '无法读取',
+  Booked: '已入账',
+  'not stated': '未说明',
+  'Skipped as duplicates': '作为重复项跳过',
+  // The verdict itself is a wire value and is never looked up.
+  Verdict: '判定',
+  ['The file is archived and nothing was booked. Every reason is below, and each one is '
+    + 'waiting in the review queue.']:
+    '文件已归档，没有任何内容入账。每一条原因都在下面，而且每一条都在待审队列里等着。',
+  'No detail was returned with this refusal.': '这次拒收没有返回任何细节。',
+  ['These exact bytes were already archived, so there was nothing to do. Re-uploading a '
+    + 'statement is always safe.']:
+    '这些字节此前已经归档过，因此没有任何事情要做。重复上传一份账单永远是安全的。',
+  'The file could not be read at all.': '这个文件完全无法读取。',
+  'No answer': '没有响应',
+  Rejected: '被拒绝',
+  'The upload was refused.': '这次上传被拒绝。',
+  'Server status {status}.': '服务器状态 {status}。',
+
+  // The review queue. Resolving books nothing, and the Chinese says so as
+  // plainly as the English does.
+  ['Everything here was archived and not booked. Resolving records that a person looked at '
+    + 'it; it never books a transaction. The way a refused statement gets into the ledger is '
+    + 'to fix the parser and re-ingest the kept bytes.']:
+    '这里的每一项都已归档且未入账。“处理完毕”只是记录有人看过它；它永远不会让任何一笔交易入账。'
+    + '一份被拒收的账单进入账本的方式，是修好解析器并重新导入保留下来的字节。',
+  Blocking: '阻断',
+  Warning: '警告',
+  Warnings: '警告',
+  'Blocking — nothing was booked': '阻断——没有任何内容入账',
+  '{count} blocking': '{count} 条阻断',
+  '{count} warning': '{count} 条警告',
+  'unknown check': '未知检查项',
+  'period unread': '账期未读出',
+  'Queued {when}': '入队于 {when}',
+  'Closed {when}': '关闭于 {when}',
+  yes: '是',
+  no: '否',
+  Resolve: '处理完毕',
+  Dismiss: '搁置',
+  'Dismiss anyway': '仍然搁置',
+  'Keep it open': '保持打开',
+  ['The statement stays archived. Fixing the parser and re-ingesting the kept bytes is the '
+    + 'only route into the ledger.']:
+    '账单仍然归档保留。修好解析器并重新导入保留下来的字节，是进入账本的唯一路径。',
+  'The item could not be updated.': '无法更新这一项。',
+  'Nothing is waiting on you.': '没有任何事情在等你。',
+  ['Every statement in the ledger passed its own printed totals. Anything that did not would '
+    + 'be listed here, unbooked.']:
+    '账本里的每一份账单都通过了它自己印出的合计。没有通过的会列在这里，且未入账。',
+  'The queue could not be read.': '无法读取该队列。',
+
+  // The statement archive. `ledgerbox doctor` is a command and stays.
+  '{count} statement(s)': '{count} 份账单',
+  '{count} not booked': '{count} 份未入账',
+  'No statements yet.': '还没有任何账单。',
+  ['Anything dropped above is listed here, archived either way — and booked only if it '
+    + 'reconciles against the totals printed on it.']:
+    '在上面拖入的任何文件都会列在这里，无论如何都会归档——'
+    + '只有与它上面印出的合计对上账才会入账。',
+  'No statement matches this search.': '没有账单符合这次检索。',
+  ['Nothing has been deleted and nothing has changed — emptying the search box above brings '
+    + 'the whole list back.']:
+    '什么都没有被删除，什么都没有改变——清空上面的检索框就能让整个列表回来。',
+  'month unread': '月份未读出',
+  'Not booked': '未入账',
+  'institution not stated': '未说明机构',
+  '{count} blocking in the queue': '队列中有 {count} 条阻断',
+  '{count} warning(s) in the queue': '队列中有 {count} 条警告',
+  '{bytes} bytes': '{bytes} 字节',
+  'ingested {when}': '导入于 {when}',
+  ['In the archive, not in the ledger. None of its transactions were booked, so nothing on '
+    + 'this page counts them. Fixing the parser and re-ingesting these same bytes is the way '
+    + 'in; deleting is the way out.']:
+    '在归档里，不在账本里。它的交易一笔都没有入账，所以本页没有任何数字在统计它们。'
+    + '修好解析器并重新导入同样这些字节是进来的路；删除是出去的路。',
+  'The statement was deleted.': '该账单已删除。',
+  'The statement list could not be read.': '无法读取账单列表。',
+  ['{count} file(s) could not be removed from disk. `ledgerbox doctor` reports them, and '
+    + 'exits non-zero, until they are gone:']:
+    '有 {count} 个文件无法从磁盘上删除。在它们消失之前，`ledgerbox doctor` 会报告它们，'
+    + '并以非零码退出：',
+  '{range} matched, {total} in all': '{range}匹配；全部 {total} 份',
 };
