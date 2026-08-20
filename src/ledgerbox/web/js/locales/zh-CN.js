@@ -22,14 +22,16 @@
 // one place registration happens, so a language cannot half-arrive by being
 // imported somewhere unexpected.
 //
-// **What is deliberately not here.** Three explanatory paragraphs -- the
-// hatched-slice note under the category chart, the bank-leg note under the
-// transaction table, and the archive note under the statement list. Each is
-// broken into several text nodes by an inline `<strong>`, so the sweep sees
-// fragments rather than a sentence, and a fragment translated on its own only
-// reads correctly if Chinese happens to put the emphasised words in the same
-// place English does. Word order is not a property a dictionary can preserve.
-// `missingKeys()` names the fragments in the console meanwhile.
+// **What is deliberately not here.** Four explanatory paragraphs in
+// `index.html` -- the lede over the month chart, the hatched-slice note under
+// the category chart, the bank-leg note under the transaction table, and the
+// archive note under the statement list. Each is broken into several text
+// nodes by an inline `<strong>` or `<em>`, so the sweep sees fragments rather
+// than a sentence, and a fragment translated on its own only reads correctly
+// if Chinese happens to emphasise in the same place English does. Word order
+// is not a property a dictionary can preserve. `missingKeys()` names all
+// twenty-odd fragments in the console meanwhile, which is how the fourth one
+// was found: this note said three until the page was opened and read.
 //
 // This note used to give a different reason -- that they quoted labels other
 // modules still rendered in English. That rule is real and is why several
@@ -130,7 +132,7 @@ export const zhCN = {
   'dated up to {until}': '日期截至 {until}',
   // `In` and `Out` are substituted here, not written again; see analytics.js.
   ['{count} transfer(s) excluded: {inflow} from {in}, {outflow} from {out}']:
-    '已排除 {count} 笔转账：{in} 减少 {inflow}，{out} 减少 {outflow}',
+    '已排除 {count} 笔转账：从{in}中扣除 {inflow}，从{out}中扣除 {outflow}',
   ['Balance is not shown for this range: nothing in this ledger is dated on or before its '
     + 'end, so there is no evidence of what the account held then.']:
     '此范围不显示余额：本账本中没有任何一笔的日期在该范围结束当天或之前，'

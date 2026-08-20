@@ -19,7 +19,7 @@ export const zhCNPanels = {
     + 'the shown category as your own decision; anything wrong, change it in Transactions '
     + 'instead.']:
     '金额不低于 $1,000、且没有任何人直接确认过其类别的行。确认会把当前显示的类别定为你自己的'
-    + '决定；有问题就到 Transactions 里改，而不是在这里确认。',
+    + '决定；有问题就到“交易”里改，而不是在这里确认。',
   'set by Agent': '由 Agent 决定',
   'set by your earlier answer': '由你此前的回答决定',
   'set by a shipped rule': '由出厂规则决定',
@@ -28,7 +28,7 @@ export const zhCNPanels = {
   'Confirmed {category} for the {amount} line.': '已把 {amount} 那一行确认为 {category}。',
   'Confirm {category} for {amount} on {date}': '把 {date} 的 {amount} 确认为 {category}',
   'Could not confirm the category.': '无法确认该类别。',
-  'Classify in Transactions': '到 Transactions 分类',
+  'Classify in Transactions': '到“交易”里分类',
   '{count} large line(s) awaiting one look': '{count} 笔大额待看一眼',
   '(more beyond the first 200)': '（前 200 条之外还有）',
   'Every large line has a person-confirmed answer.': '每一笔大额都已有人确认过答案。',

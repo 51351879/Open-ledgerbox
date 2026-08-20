@@ -265,7 +265,7 @@ export function createCategoryChart(root) {
     );
     toggle.appendChild(pct);
     toggle.appendChild(el('span', 'legend__amount num money', formatMinor(slice.spend_minor)));
-    toggle.appendChild(el('span', 'legend__count num', `${slice.txn_count} line(s)`));
+    toggle.appendChild(el('span', 'legend__count num', CLAIM_COPY.lines(slice.txn_count)));
     row.appendChild(toggle);
     if (unclaimed) {
       row.appendChild(el(

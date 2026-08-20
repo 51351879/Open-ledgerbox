@@ -70,6 +70,9 @@ const COPY = localized({
   shareKey: 'Share of total spent',
   visibleShareKey: 'Share of visible spent',
   lineShareKey: 'Share of spending lines',
+  // The count beside every legend row. It lives here rather than in the panel
+  // for the reason the header gives: this module is what this panel says.
+  lines: (count) => t('{count} line(s)', { count }),
   hiddenTag: 'switched off',
   totalLead: 'Total spent',
   // The functions carry their own separator and their sentence does not; see

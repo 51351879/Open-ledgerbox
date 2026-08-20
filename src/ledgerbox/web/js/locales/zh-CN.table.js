@@ -154,4 +154,6 @@ export const zhCNTable = {
     '{count} 个交易月的资金进出柱状图，从 {first} 到 {last}。'
     + '流入画在零线上方，流出画在下方，用同一个刻度。'
     + '每一列都可以获得焦点以查看它自己的数字，而其中每一个数字也都在图表下方的表格里。',
+  // The count beside every legend row of the category ring.
+  '{count} line(s)': '{count} 行',
 };
