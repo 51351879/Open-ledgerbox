@@ -18,6 +18,7 @@ import {
   withdrawProposalRun,
 } from './api.js';
 import { CONNECTION_COPY } from './connection.js';
+import { t } from './i18n.js';
 import { renderProposalGroups, renderProposalHistory } from './agent-proposal-groups.js';
 
 const defaultServices = {
@@ -31,28 +32,36 @@ const defaultServices = {
 function producerName(client) {
   if (client === 'codex') return 'Codex';
   if (client === 'claude-code') return 'Claude Code';
-  return 'Other local tool';
+  return t('Other local tool');
 }
 
 function runLabel(run) {
   const short = run.run_id.startsWith('sha256:') ? run.run_id.slice(7, 19) : run.run_id.slice(0, 12);
-  return `${run.pending} pending · ${run.state} · ${run.created_at} · ${short}`;
+  // `state` is a wire value and the rest are stamps and identifiers: the one
+  // word here that is prose is the only one that goes through the dictionary.
+  return `${t('{count} pending', { count: run.pending })} · ${run.state}`
+    + ` · ${run.created_at} · ${short}`;
 }
 
+// The service's own sentence is quoted exactly as it arrived; only what this
+// page adds to it is translated. The first is a fact reported by the local
+// process, the second is this page's advice about what that fact means for the
+// action you just tried, and one key covering both would put the dictionary in
+// charge of wording it does not own.
 function failureCopy(error) {
-  const message = error?.message || 'The local service reported an unexplained failure.';
+  const message = error?.message || t('The local service reported an unexplained failure.');
   if (isOffline(error)) {
-    return `${message} Reload current facts before retrying; this page cannot confirm whether `
-      + 'the action finished.';
+    return `${message} ${t('Reload current facts before retrying; this page cannot confirm '
+      + 'whether the action finished.')}`;
   }
   if (error?.status === 409) {
-    return `${message} The proposal or ledger changed. Reload current facts before reviewing; `
-      + 'this refused action changed nothing.';
+    return `${message} ${t('The proposal or ledger changed. Reload current facts before '
+      + 'reviewing; this refused action changed nothing.')}`;
   }
   if (error?.status >= 400 && error?.status < 500) {
-    return `${message} This refused action changed nothing.`;
+    return `${message} ${t('This refused action changed nothing.')}`;
   }
-  return `${message} Reload current facts before retrying.`;
+  return `${message} ${t('Reload current facts before retrying.')}`;
 }
 
 export function createProposalPanel({ root, onChange = () => {}, services = defaultServices }) {
@@ -60,7 +69,7 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
   root.setAttribute('aria-labelledby', 'agent-proposals-h');
 
   const head = el('div', 'panel__head');
-  head.appendChild(el('h2', 'panel__title', 'Agent proposals'));
+  head.appendChild(el('h2', 'panel__title', t('Agent proposals')));
   head.children[0].id = 'agent-proposals-h';
   const counts = el('p', 'panel__meta');
   head.appendChild(counts);
@@ -68,10 +77,17 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
   const note = el(
     'p',
     'panel__note',
-    'This panel only lists suggestions the Agent submitted. A zero pending count does not mean '
-      + 'every candidate was classified: suggestions the Agent omitted stay under Transactions '
-      + 'with Category set to “Nothing claimed this”. Review-first runs wait here; automatic '
-      + 'v2 runs are already applied atomically and remain inspectable and withdrawable here.',
+    // Quotes a label the transaction filter still renders in English, so it has
+    // no dictionary entry yet: prose in one language pointing at a control in
+    // another sends the reader looking for something that is not on the page.
+    // It goes through `t()` now, so the entry is the only thing still missing.
+    t(
+      'This panel only lists suggestions the Agent submitted. A zero pending count does not '
+        + 'mean every candidate was classified: suggestions the Agent omitted stay under '
+        + 'Transactions with Category set to “Nothing claimed this”. Review-first runs wait '
+        + 'here; automatic v2 runs are already applied atomically and remain inspectable and '
+        + 'withdrawable here.',
+    ),
   );
   root.appendChild(note);
 
@@ -109,17 +125,17 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
     clear(controls);
     clear(body);
     body.className = 'proposal-body empty';
-    body.textContent = 'No Agent proposal runs yet. You can keep classifying with the manual '
-      + 'transaction controls, or submit a proposal with the local JSON command.';
-    counts.textContent = '0 runs';
+    body.textContent = t('No Agent proposal runs yet. You can keep classifying with the manual '
+      + 'transaction controls, or submit a proposal with the local JSON command.');
+    counts.textContent = t('0 runs');
     showNotice('');
-    announce('No Agent proposals to review.');
+    announce(t('No Agent proposals to review.'));
   }
 
   function renderControls() {
     clear(controls);
     const label = el('label', 'control proposal-controls__run');
-    label.appendChild(el('span', 'control__key', 'Proposal run'));
+    label.appendChild(el('span', 'control__key', t('Proposal run')));
     const select = el('select', 'control__field');
     runSelect = select;
     for (const run of runs) select.appendChild(option(run.run_id, runLabel(run)));
@@ -130,7 +146,7 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
     });
     label.appendChild(select);
     controls.appendChild(label);
-    controls.appendChild(button('btn btn--quiet', 'Reload current facts', () => refresh()));
+    controls.appendChild(button('btn btn--quiet', t('Reload current facts'), () => refresh()));
   }
 
   function renderRunMeta(run) {
@@ -142,8 +158,12 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
     top.appendChild(el('span', 'proposal-run__stamp', run.created_at));
     meta.appendChild(top);
     const details = [];
-    if (producer.client_version) details.push(`client ${producer.client_version}`);
-    if (producer.model_reported) details.push(`model label ${producer.model_reported} (self-reported)`);
+    if (producer.client_version) {
+      details.push(t('client {version}', { version: producer.client_version }));
+    }
+    if (producer.model_reported) {
+      details.push(t('model label {label} (self-reported)', { label: producer.model_reported }));
+    }
     if (details.length) meta.appendChild(el('p', 'proposal-run__producer', details.join(' · ')));
     const id = el('code', 'proposal-run__id', run.run_id);
     id.setAttribute('title', run.run_id);
@@ -157,14 +177,18 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
     try {
       const result = await services.review(runId, body);
       const changed = result.accepted + result.edited + result.rejected;
-      const verb = request.action === 'reject' ? 'Rejected' : 'Applied';
-      await refresh({ notice: `${verb} ${changed} proposal(s).`, tone: 'ok', focus: true });
+      // Two whole sentences rather than a verb pasted onto a count: a language
+      // that puts its verb elsewhere cannot translate half of one.
+      const notice = request.action === 'reject'
+        ? t('Rejected {count} proposal(s).', { count: changed })
+        : t('Applied {count} proposal(s).', { count: changed });
+      await refresh({ notice, tone: 'ok', focus: true });
       onChange();
       return true;
     } catch (error) {
       const message = failureCopy(error);
       showNotice(message, 'fail');
-      announce('Proposal review failed. Current selection was kept.');
+      announce(t('Proposal review failed. Current selection was kept.'));
       return false;
     }
   }
@@ -174,38 +198,49 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
       row.outcome === 'accepted' || row.outcome === 'edited'
     )).length;
     if (applied === 0) return;
-    const action = button('btn btn--quiet proposal-withdraw__start', 'Withdraw applied decisions', () => {
+    const startLabel = t('Withdraw applied decisions');
+    const action = button('btn btn--quiet proposal-withdraw__start', startLabel, () => {
       action.disabled = true;
       const confirm = el('div', 'notice notice--confirm proposal-withdraw');
       confirm.appendChild(
         el(
           'p',
           'notice__text',
-          `${applied} applied decision(s) belong to this run. Withdrawal clears only categories `
-            + 'that still match what this run applied; later manual edits are preserved.',
+          t(
+            '{count} applied decision(s) belong to this run. Withdrawal clears only categories '
+              + 'that still match what this run applied; later manual edits are preserved.',
+            { count: applied },
+          ),
         ),
       );
       const actions = el('div', 'notice__actions');
-      const withdraw = button('btn', 'Confirm withdrawal', async () => {
+      const withdraw = button('btn', t('Confirm withdrawal'), async () => {
         withdraw.disabled = true;
         keep.disabled = true;
         try {
           const result = await services.withdraw(run.run_id);
           await refresh({
-            notice: `Withdrew ${result.withdrawn}; already absent ${result.already_absent}; `
-              + `changed later and preserved ${result.changed_later}.`,
+            notice: t(
+              'Withdrew {withdrawn}; already absent {absent}; changed later and preserved '
+                + '{preserved}.',
+              {
+                withdrawn: result.withdrawn,
+                absent: result.already_absent,
+                preserved: result.changed_later,
+              },
+            ),
             tone: 'ok',
             focus: true,
           });
           onChange();
         } catch (error) {
           showNotice(failureCopy(error), 'fail');
-          announce('Proposal withdrawal could not be confirmed. Reload current facts.');
+          announce(t('Proposal withdrawal could not be confirmed. Reload current facts.'));
           withdraw.disabled = false;
           keep.disabled = false;
         }
       });
-      const keep = button('btn btn--quiet', 'Keep applied decisions', () => {
+      const keep = button('btn btn--quiet', t('Keep applied decisions'), () => {
         confirm.hidden = true;
         action.disabled = false;
       });
@@ -239,9 +274,12 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
         el(
           'p',
           'empty',
-          'This run has no pending proposals. That only means every submitted suggestion was '
-            + 'reviewed. Candidates the Agent omitted never appear in this run; find them under '
-            + 'Transactions → Category → Nothing claimed this.',
+          // Also quotes the filter's English label; see the note above.
+          t(
+            'This run has no pending proposals. That only means every submitted suggestion was '
+              + 'reviewed. Candidates the Agent omitted never appear in this run; find them '
+              + 'under Transactions → Category → Nothing claimed this.',
+          ),
         ),
       );
     }
@@ -268,10 +306,13 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
       const run = await services.fetchRun(selectedRunId);
       renderRun(run, categories);
       const pending = runs.reduce((total, item) => total + item.pending, 0);
-      counts.textContent = `${pending} pending in ${runs.length} recent run(s)`;
+      counts.textContent = t('{pending} pending in {runs} recent run(s)', {
+        pending,
+        runs: runs.length,
+      });
       if (options.notice) showNotice(options.notice, options.tone || 'neutral');
       else showNotice('');
-      announce(options.notice || `${pending} Agent proposal(s) pending.`);
+      announce(options.notice || t('{count} Agent proposal(s) pending.', { count: pending }));
       if (options.focus) runSelect?.focus?.();
     } catch (error) {
       clear(controls);
@@ -284,11 +325,14 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
         // answering, on one page, which translating the page made visible.
         body.textContent = CONNECTION_COPY.panel;
         showNotice('');
-        announce('Agent proposal review is waiting.');
+        announce(t('Agent proposal review is waiting.'));
       } else {
-        body.textContent = 'Agent proposal review could not load.';
-        showNotice(error?.message || 'The local service reported an unexplained failure.', 'fail');
-        announce('Agent proposal review could not load.');
+        body.textContent = t('Agent proposal review could not load.');
+        showNotice(
+          error?.message || t('The local service reported an unexplained failure.'),
+          'fail',
+        );
+        announce(t('Agent proposal review could not load.'));
       }
       counts.textContent = '';
     } finally {

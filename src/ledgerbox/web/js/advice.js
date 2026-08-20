@@ -30,8 +30,13 @@
 // cannot tell pay from a transfer in.
 
 import { clear, el, formatMinor } from './api.js';
+import { localized, t } from './i18n.js';
 
-const COPY = {
+// Read through the dictionary at the moment each sentence is read. The
+// disclaimers below are the point of this panel rather than decoration on it,
+// so a translation that softens one is a defect and not a style choice: the
+// `ledgerbox-translate` Skill says so where a translator will see it.
+const COPY = localized({
   title: 'Planning notes',
   intro: 'General information, not advice, and not from anyone licensed to give it. Nothing '
     + 'here is computed from your transactions: the rules that sort spending into categories '
@@ -39,22 +44,29 @@ const COPY = {
     + 'would be reading a breakdown that does not cover enough to say it. Pick a range to see '
     + 'the ordinary rules of thumb for it, and check them against the figures at the top of '
     + 'this page yourself.',
-  choose: 'Pick an annual income range for the ordinary rules of thumb at that level.',
-  chosen: (label) => `General notes for ${label}`,
   disclaimer: 'General information only. Not advice, not personalised, and not written by '
     + 'anyone licensed to give it. Figures at the top of this page are measured; nothing in '
     + 'this section is.',
   blind: 'This section cannot see what you spend it on. The category breakdown above covers '
     + 'only the part of your spending the shipped rules claim, and on most ledgers that is a '
     + 'small share — so no note here is derived from it.',
-  netLead: 'Over the window selected at the top of this page, these statements net ',
+  // The space before the figure is *not* in this sentence. Keys are
+  // normalised, so a trailing space is trimmed out of the key -- and, since
+  // English reads through the same lookup, off the page as well, welding the
+  // amount to the last word. The separator lives at the reading site instead.
+  netLead: 'Over the window selected at the top of this page, these statements net',
   netRest: '. That is what the documents say, and it is the only figure this section uses.',
   netUnknown: 'Once a statement is booked, this section will quote the net for the selected '
     + 'window — the one figure here that comes from your own documents.',
-};
+});
 
 // Ordinary, widely published rules of thumb. No range is told what it spends,
 // and none of these is a recommendation to buy anything.
+//
+// Not wrapped in `localized()`: its prose is a level down, inside objects and
+// arrays, and that wrapper is shallow on purpose. Half-translating a table is
+// worse than leaving it, so the sentences take `t()` where they are read. The
+// `label` of each range is an amount and is never looked up.
 const RANGES = [
   {
     id: '30-50',
@@ -150,7 +162,7 @@ export function createAdvicePanel(options) {
 
   const choicesNode = el('div', 'advice__choices');
   choicesNode.setAttribute('role', 'group');
-  choicesNode.setAttribute('aria-label', 'Annual income range');
+  choicesNode.setAttribute('aria-label', t('Annual income range'));
   root.appendChild(choicesNode);
 
   const bodyNode = el('div', 'advice__body');
@@ -166,11 +178,11 @@ export function createAdvicePanel(options) {
       return;
     }
 
-    bodyNode.appendChild(el('h3', 'advice__heading', range.heading));
+    bodyNode.appendChild(el('h3', 'advice__heading', t(range.heading)));
 
     const list = el('ul', 'advice__list');
     for (const note of range.notes) {
-      list.appendChild(el('li', 'advice__note', note));
+      list.appendChild(el('li', 'advice__note', t(note)));
     }
     bodyNode.appendChild(list);
 
@@ -182,7 +194,7 @@ export function createAdvicePanel(options) {
     if (measured === null || measured === undefined) {
       line.appendChild(el('span', '', COPY.netUnknown));
     } else {
-      line.appendChild(el('span', '', COPY.netLead));
+      line.appendChild(el('span', '', `${COPY.netLead} `));
       line.appendChild(el('strong', 'num money', formatMinor(measured)));
       line.appendChild(el('span', '', COPY.netRest));
     }
