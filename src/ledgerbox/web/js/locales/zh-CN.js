@@ -1,12 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //
-// Simplified Chinese. The key is the English sentence exactly as the page says
-// it; `tests/js/locales.test.js` refuses a key that appears nowhere in the
-// interface, so this file cannot drift into translating sentences that do not
+// Simplified Chinese, the page around the panels: the masthead, the date
+// window, the sidebar, the section names, the two pictures and the four
+// figures above them, the connection light, the status strip and the footer.
+//
+// **The key is the English sentence exactly as the page says it.**
+// `tests/js/locales.test.js` refuses a key that appears nowhere in the
+// interface, so no file here can drift into translating sentences that do not
 // exist.
 //
-// It exports the dictionary and registers nothing. `locales/all.js` is the one
-// place registration happens, so a language cannot half-arrive by being
+// **This language arrives in four files** -- this one, `zh-CN.agent.js`,
+// `zh-CN.panels.js` and `zh-CN.table.js`. A dictionary is the one file that
+// grows with every sentence the page gains, and this one met the 400-line
+// split signal that every module here answers to. It was split rather than
+// exempted, along the seam the page already has: the frame, the Agent review
+// panels, the other panels, the table. `registerLocale` merges rather than
+// replaces, which is what makes a language in several files safe, and the
+// counterexamples refuse a file nothing imports and a sentence answered twice.
+//
+// Each file exports a dictionary and registers nothing. `locales/all.js` is the
+// one place registration happens, so a language cannot half-arrive by being
 // imported somewhere unexpected.
 //
 // **What is deliberately not here.** Three explanatory paragraphs -- the
@@ -55,6 +68,25 @@ export const zhCN = {
   To: '到',
   Refresh: '刷新',
 
+  // The date window. `This year` is not here and cannot be: the control shows
+  // the year itself, so that label never reaches the page.
+  'All time': '全部时间',
+  'Last 7 days': '最近 7 天',
+  'Last month': '最近一个月',
+  'Last 3 months': '最近 3 个月',
+  'Last 6 months': '最近 6 个月',
+  'Last 12 months': '最近 12 个月',
+  'Custom…': '自定义…',
+  'the whole ledger': '整本账',
+  '{since} to {until}': '{since} 到 {until}',
+  '{since} onwards': '{since} 起',
+  'everything up to {until}': '截至 {until} 的全部',
+  ['The start of the range is after its end, so it selects nothing. Swap the two dates, or '
+    + 'clear one of them. Nothing below has changed: the figures, both charts and the table '
+    + 'are still showing {showing}.']:
+    '范围的起点在终点之后，因此它什么都选不到。把两个日期对调，或者清掉其中一个。'
+    + '下方没有任何东西发生变化：数字、两张图和表格显示的仍然是 {showing}。',
+
   // The sidebar
   'Ledger navigation and Agent connection': '账本导航与 Agent 连接',
   'On this page': '本页目录',
@@ -83,6 +115,53 @@ export const zhCN = {
   'What was spent, by category': '按类别看支出去向',
   'Share of spending by category.': '各类别在支出中的占比。',
 
+  // The two pictures and the four figures above them.
+  'Where it went': '钱去了哪里',
+  In: '流入',
+  Out: '流出',
+  Net: '净额',
+  Balance: '余额',
+  '{count} transaction(s)': '{count} 笔交易',
+  '{count} transaction month(s)': '{count} 个交易月',
+  '{count} bucket(s)': '{count} 个类别桶',
+  'dated {since} to {until}': '日期从 {since} 到 {until}',
+  'dated {since} onwards': '日期自 {since} 起',
+  'dated up to {until}': '日期截至 {until}',
+  // `In` and `Out` are substituted here, not written again; see analytics.js.
+  ['{count} transfer(s) excluded: {inflow} from {in}, {outflow} from {out}']:
+    '已排除 {count} 笔转账：{in} 减少 {inflow}，{out} 减少 {outflow}',
+  ['Balance is not shown for this range: nothing in this ledger is dated on or before its '
+    + 'end, so there is no evidence of what the account held then.']:
+    '此范围不显示余额：本账本中没有任何一笔的日期在该范围结束当天或之前，'
+    + '因此没有证据说明当时账户里有多少钱。',
+  ['Two readings of the same booked lines, grouped by the database and not by this page. Both '
+    + 'count booked lines only: a statement that failed a check printed on it is archived and '
+    + 'never averaged in here, exactly as it is never counted in the four figures above. '
+    + 'Marking a line as a transfer takes it out of both pictures.']:
+    '对同一批已入账行的两种读法，由数据库分组，而不是由本页分组。'
+    + '两者都只统计已入账的行：一份没有通过它自己印出的检查的账单会被归档，'
+    + '永远不会在这里被计入，正如它永远不会被计入上方的四个数字。'
+    + '把一行标记为转账，会把它从这两张图里都拿掉。',
+  'The breakdown could not be read.': '无法读取该明细。',
+  'Nothing is booked yet.': '还没有任何入账。',
+  ['Totals appear once a statement has passed every check printed on it. A statement that '
+    + 'fails one is archived and listed below, never averaged in.']:
+    '一份账单通过它上面印出的每一项检查之后，合计才会出现。'
+    + '没有通过其中某一项的账单会被归档并列在下方，永远不会被计入。',
+  'Nothing is booked yet, so there is nothing to break down.':
+    '还没有任何入账，因此没有可以拆解的东西。',
+  ['These two pictures are drawn from booked lines only: a statement that failed a check '
+    + 'printed on it is archived and never averaged in here, exactly as it is never counted in '
+    + 'the four figures at the top of the page.']:
+    '这两张图只画已入账的行：一份没有通过它自己印出的检查的账单会被归档，'
+    + '永远不会在这里被计入，正如它永远不会被计入本页顶部的四个数字。',
+  'No booked line falls in this date range.':
+    '这个日期范围内没有任何已入账的行。',
+  ['The ledger is not empty — widen the range, or set it back to All time, to see what is in '
+    + 'it. The figures above describe this range too, which is why they are zero.']:
+    '账本不是空的——把范围放宽，或者把它设回“全部时间”，就能看到里面有什么。'
+    + '上方的数字描述的也是这个范围，这就是它们为零的原因。',
+
   // The connection light and the sentence under it. One place on the page
   // explains a server that is not answering; six panels only say they are
   // waiting, so `Waiting for ledgerbox.` is short on purpose here too.
@@ -110,28 +189,6 @@ export const zhCN = {
     '还没有账本文件。第一次有账单入账时才会创建它。',
   'Data directory': '数据目录',
 
-  // Large flows: the board for money no person has confirmed. Category IDs and
-  // amounts are substituted into these sentences, never looked up in them.
-  ['Lines of at least $1,000 whose category no person has directly confirmed. Confirm keeps '
-    + 'the shown category as your own decision; anything wrong, change it in Transactions '
-    + 'instead.']:
-    '金额不低于 $1,000、且没有任何人直接确认过其类别的行。确认会把当前显示的类别定为你自己的'
-    + '决定；有问题就到 Transactions 里改，而不是在这里确认。',
-  'set by Agent': '由 Agent 决定',
-  'set by your earlier answer': '由你此前的回答决定',
-  'set by a shipped rule': '由出厂规则决定',
-  'nobody claimed this': '没有任何规则认领',
-  Confirm: '确认',
-  'Confirmed {category} for the {amount} line.': '已把 {amount} 那一行确认为 {category}。',
-  'Confirm {category} for {amount} on {date}': '把 {date} 的 {amount} 确认为 {category}',
-  'Could not confirm the category.': '无法确认该类别。',
-  'Classify in Transactions': '到 Transactions 分类',
-  '{count} large line(s) awaiting one look': '{count} 笔大额待看一眼',
-  '(more beyond the first 200)': '（前 200 条之外还有）',
-  'Every large line has a person-confirmed answer.': '每一笔大额都已有人确认过答案。',
-  'Waiting for the local Ledgerbox service.': '正在等待本地 Ledgerbox 服务。',
-  'Could not read large flows.': '无法读取大额流水。',
-
   // The statement list
   'Search these statements': '检索这些账单',
   'month, institution or id': '月份、机构或 id',
@@ -142,187 +199,4 @@ export const zhCN = {
   ['Runs on this machine only. No account, no telemetry, no outbound request: your statements '
     + 'never leave this computer.']:
     '只在这台机器上运行。无账号、无遥测、无对外请求：你的账单不会离开这台电脑。',
-
-  // Both Agent panels: what a failed write means for the action you just tried.
-  // The service's own sentence arrives in English beside these and is quoted
-  // rather than translated -- it is the local process reporting, not the page
-  // speaking.
-  'The local service reported an unexplained failure.': '本地服务报告了一个未说明的失败。',
-  ['Reload current facts before retrying; this page cannot confirm whether the action '
-    + 'finished.']:
-    '重试前请重新读取当前事实；本页无法确认该操作是否已经完成。',
-  'Reload current facts before retrying.': '重试前请重新读取当前事实。',
-  'This refused action changed nothing.': '这次被拒绝的操作什么都没有改变。',
-  ['The proposal or ledger changed. Reload current facts before reviewing; this refused '
-    + 'action changed nothing.']:
-    '提案或账本已发生变化。审阅前请重新读取当前事实；这次被拒绝的操作什么都没有改变。',
-  ['The triage or ledger changed. Reload current facts before reviewing; this refused '
-    + 'action changed nothing.']:
-    '分流或账本已发生变化。审阅前请重新读取当前事实；这次被拒绝的操作什么都没有改变。',
-  'Reload current facts': '重新读取当前事实',
-
-  // Who produced a run. `Codex` and `Claude Code` are product names and stay.
-  'Other local tool': '其他本地工具',
-  'client {version}': '客户端 {version}',
-  'model label {label} (self-reported)': '模型标签 {label}（自述）',
-  '{count} pending': '{count} 条待审',
-  '0 runs': '0 个轮次',
-  '{pending} pending in {runs} recent run(s)': '最近 {runs} 个轮次中有 {pending} 条待审',
-  'Confirm withdrawal': '确认撤回',
-  ['Withdrew {withdrawn}; already absent {absent}; changed later and preserved {preserved}.']:
-    '已撤回 {withdrawn}；原本就不存在 {absent}；此后被改过因而保留 {preserved}。',
-
-  // Agent proposals. The panel's two long notes are deliberately absent: both
-  // quote `Nothing claimed this`, the transaction filter's label, which is
-  // still rendered in English. Prose in one language pointing at a control in
-  // another sends the reader looking for something that is not on the page.
-  'Proposal run': '提案轮次',
-  ['No Agent proposal runs yet. You can keep classifying with the manual transaction '
-    + 'controls, or submit a proposal with the local JSON command.']:
-    '还没有任何 Agent 提案轮次。你可以继续用手工交易控件分类，或者用本地 JSON 命令提交一份提案。',
-  'No Agent proposals to review.': '没有待审阅的 Agent 提案。',
-  '{count} Agent proposal(s) pending.': '有 {count} 条 Agent 提案待审。',
-  'Applied {count} proposal(s).': '已应用 {count} 条提案。',
-  'Rejected {count} proposal(s).': '已拒绝 {count} 条提案。',
-  'Proposal review failed. Current selection was kept.': '提案审阅失败。当前选择已保留。',
-  'Withdraw applied decisions': '撤回已应用的决定',
-  'Keep applied decisions': '保留已应用的决定',
-  ['{count} applied decision(s) belong to this run. Withdrawal clears only categories that '
-    + 'still match what this run applied; later manual edits are preserved.']:
-    '有 {count} 条已应用的决定属于这一轮。撤回只会清除仍与这一轮所应用内容一致的类别；'
-    + '此后的人工修改会被保留。',
-  ['Proposal withdrawal could not be confirmed. Reload current facts.']:
-    '无法确认提案撤回是否完成。请重新读取当前事实。',
-  'Agent proposal review is waiting.': 'Agent 提案审阅正在等待。',
-  'Agent proposal review could not load.': 'Agent 提案审阅无法加载。',
-
-  // Remaining coverage triage. Its panel note is absent for the same reason as
-  // the two above: it quotes `Possible transfer`, a route heading
-  // `triage-groups.js` still renders in English.
-  'Remaining coverage triage': '剩余覆盖率分流',
-  'Triage run': '分流轮次',
-  // The compact range beside a run, where a bound the run did not have is
-  // written as one word. The sentence form is directly below it.
-  start: '起点',
-  end: '终点',
-  'all dates': '全部日期',
-  '{since} through {until}': '{since} 至 {until}',
-  'All transaction dates': '全部交易日期',
-  ['No remaining-coverage triage runs yet. Manual transaction classification and Agent '
-    + 'proposal review remain available.']:
-    '还没有任何剩余覆盖率分流轮次。手工交易分类与 Agent 提案审阅依然可用。',
-  'No remaining coverage triage to review.': '没有待审阅的剩余覆盖率分流。',
-  '{count} remaining coverage item(s) pending.': '有 {count} 条剩余覆盖率项待处理。',
-  'This run has no pending triage items.': '这一轮没有待处理的分流项。',
-  'Recorded {count} explicit triage decision(s).': '已记录 {count} 条明确的分流决定。',
-  'Triage review failed. Current selection was kept.': '分流审阅失败。当前选择已保留。',
-  'Dismiss remaining as uncertain': '把剩余的搁置为不确定',
-  'Confirm leave unclassified': '确认保持未分类',
-  'Keep reviewing': '继续审阅',
-  ['{count} pending item(s) will remain unclassified. This changes no category or money '
-    + 'figure.']:
-    '将有 {count} 条待处理项保持未分类。这不会改变任何类别或金额数字。',
-  'Left {count} remaining item(s) unclassified.': '已把剩余 {count} 条保持为未分类。',
-  ['Triage dismissal could not be confirmed. Reload current facts.']:
-    '无法确认分流搁置是否完成。请重新读取当前事实。',
-  'Withdraw applied categories': '撤回已应用的类别',
-  'Keep applied categories': '保留已应用的类别',
-  ['{count} category decision(s) came from your review of this run. Withdrawal clears only '
-    + 'values that still match; later changes are preserved.']:
-    '有 {count} 条类别决定来自你对这一轮的审阅。撤回只会清除仍然一致的值；此后的修改会被保留。',
-  'Triage withdrawal could not be confirmed. Reload current facts.':
-    '无法确认分流撤回是否完成。请重新读取当前事实。',
-
-  // Planning notes. **Not one limit in this section may be softened.** Every
-  // sentence that says this panel is not advice, is not personalised, is not
-  // written by anyone licensed, and knows nothing about this ledger says
-  // exactly that in Chinese too. A translation that reads as encouragement is
-  // a defect, not a style.
-  ['General information, not advice, and not from anyone licensed to give it. Nothing here '
-    + 'is computed from your transactions: the rules that sort spending into categories '
-    + 'claim a small share of this ledger, so a panel that told you what you spend too much '
-    + 'on would be reading a breakdown that does not cover enough to say it. Pick a range to '
-    + 'see the ordinary rules of thumb for it, and check them against the figures at the top '
-    + 'of this page yourself.']:
-    '一般性信息，不是建议，也不出自任何有执业资质的人。这里没有任何内容是根据你的交易算出来的：'
-    + '把支出归类的规则只认领了本账本的一小部分，所以一个告诉你在哪方面花得太多的面板，'
-    + '读的会是一份覆盖不足以支撑这句话的明细。选一个区间，看该水平上的常见经验法则，'
-    + '然后自己拿它们与本页顶部的数字对照。',
-  ['General information only. Not advice, not personalised, and not written by anyone '
-    + 'licensed to give it. Figures at the top of this page are measured; nothing in this '
-    + 'section is.']:
-    '仅为一般性信息。不是建议，不针对个人，也不出自任何有执业资质的人。'
-    + '本页顶部的数字是量出来的；本节中的任何内容都不是。',
-  ['This section cannot see what you spend it on. The category breakdown above covers only '
-    + 'the part of your spending the shipped rules claim, and on most ledgers that is a small '
-    + 'share — so no note here is derived from it.']:
-    '本节看不到你把钱花在了什么上面。上方的类别明细只覆盖出厂规则认领的那部分支出，'
-    + '在大多数账本上那只是一小部分——所以这里没有任何一条备注是从它推导出来的。',
-  // The space before the amount is not part of this sentence; see advice.js.
-  'Over the window selected at the top of this page, these statements net':
-    '在本页顶部所选的时间窗口内，这些账单的净额为',
-  '. That is what the documents say, and it is the only figure this section uses.':
-    '。这是文件所说的，也是本节唯一使用的数字。',
-  ['Once a statement is booked, this section will quote the net for the selected window — '
-    + 'the one figure here that comes from your own documents.']:
-    '一旦有账单入账，本节会引用所选窗口的净额——这是本节唯一一个来自你自己文件的数字。',
-  'Annual income range': '年收入区间',
-
-  // The five ranges. Their labels are amounts and are never looked up.
-  'Cash buffer first': '先建立现金缓冲',
-  ['The usual first target is a small emergency fund — often quoted as one month of '
-    + 'essential costs to start with, then three — held somewhere boring and instant.']:
-    '通常的第一个目标是一小笔应急金——常见说法是先攒够一个月的必要开支，再攒到三个月——'
-    + '放在无聊而且随时可取的地方。',
-  ['High-interest debt is normally paid down before anything is invested, because its rate '
-    + 'is certain and an investment return is not.']:
-    '高息债务通常在投资任何东西之前先还掉，因为它的利率是确定的，而投资回报不是。',
-  ['Where an employer matches retirement contributions, the match is the part most guides '
-    + 'say to capture before anything else.']:
-    '如果雇主对退休金缴存有对等匹配，多数指南都说这部分匹配要先于其他一切拿到手。',
-  'Buffer, then the tax-advantaged room': '先缓冲，再用税优额度',
-  ['Three to six months of essential costs is the range most often quoted for an emergency '
-    + 'fund once income is steady.']:
-    '收入稳定之后，应急金最常被引用的区间是三到六个月的必要开支。',
-  ['Tax-advantaged accounts have annual limits that do not carry over, which is why guides '
-    + 'usually mention them before ordinary brokerage saving.']:
-    '税优账户有不能结转到下一年的年度额度，这就是指南通常把它们排在普通券商储蓄之前的原因。',
-  ['The 50/30/20 split — needs, wants, saving — is a starting frame, not a rule. It is worth '
-    + 'checking against your own figures rather than adopting.']:
-    '50/30/20 的划分——必需、想要、储蓄——是一个起步框架，不是规则。'
-    + '它值得拿你自己的数字去核对，而不是直接采纳。',
-  'Automate, then look at fees': '先自动化，再看费用',
-  ['Automatic transfers on payday are the mechanism most commonly recommended, on the '
-    + 'grounds that it removes a monthly decision rather than because it earns anything.']:
-    '发薪日自动转账是最常被推荐的机制，理由是它省掉了一个每月都要做的决定，'
-    + '而不是因为它能多赚什么。',
-  ['Fund fees compound the same way returns do, in the other direction. Comparing expense '
-    + 'ratios is one of the few levers with a known sign.']:
-    '基金费用与收益以同样的方式复利，只是方向相反。比较费用率是少数几个方向已知的杠杆之一。',
-  ['Insurance and estate basics — disability cover, beneficiaries — tend to be raised at '
-    + 'this level because they are cheap to fix and expensive to have skipped.']:
-    '保险与遗产方面的基本事项——伤残保障、受益人——常在这个水平上被提起，'
-    + '因为补上它们很便宜，漏掉它们很贵。',
-  'Tax treatment starts to dominate': '税务处理开始起主导作用',
-  ['Which account a thing is held in starts to matter as much as what it is; asset location '
-    + 'is the usual term.']:
-    '一项资产放在哪个账户里，开始变得和它本身是什么一样重要；通常的说法叫资产配置位置。',
-  ['Concentration risk is worth naming if a large share of pay arrives as one company’s '
-    + 'equity.']:
-    '如果收入中有很大一部分是以某一家公司的股权形式到手，集中度风险值得点名。',
-  ['Marginal rates and phase-outs make general rules less reliable here. This is the level '
-    + 'at which most guides stop generalising and say to ask somebody licensed.']:
-    '边际税率与优惠递减使得一般规则在这里不那么可靠。多数指南正是在这个水平上停止泛泛而谈，'
-    + '改口说去问一个有执业资质的人。',
-  'General notes stop being useful': '一般性备注不再有用',
-  ['Published rules of thumb are written for the middle of a distribution and get less '
-    + 'applicable the further out you are.']:
-    '公开发表的经验法则是为分布的中段写的，你离中段越远，它们越不适用。',
-  ['The questions at this level — entity structure, concentrated positions, estate planning '
-    + '— have answers that depend on details no dashboard has.']:
-    '这个水平上的问题——实体架构、集中持仓、遗产规划——的答案取决于任何仪表盘都没有的细节。',
-  ['This panel is general information. For anything in that list, the honest suggestion is '
-    + 'a licensed professional rather than a page on your own machine.']:
-    '本面板是一般性信息。对于上面列表中的任何一项，诚实的建议是找一个有执业资质的专业人士，'
-    + '而不是你自己机器上的一个页面。',
 };

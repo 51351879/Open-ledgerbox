@@ -23,13 +23,26 @@
 
 import { clear, el, fetchAnalytics, formatMinor, isOffline } from './api.js';
 import { CONNECTION_COPY } from './connection.js';
+import { localized, t } from './i18n.js';
 import { loadTones } from './category-tones.js';
 import { createMonthlyChart } from './chart-monthly.js';
 import { createCategoryChart } from './chart-categories.js';
 
-const COPY = {
+// The four figure names, wrapped once and read from both places that use
+// them: the cells themselves and the sentence under them about transfers.
+// One name for one figure is a property of where the name lives, not of
+// how carefully two dictionary entries were written.
+const FIGURE = localized({ in: 'In', out: 'Out', net: 'Net', balance: 'Balance' });
+
+// Every sentence below is looked up as it is read. **The space between a
+// pair of them is not inside either one**: keys are whitespace-normalised,
+// and English reads through the same lookup as every other language, so a
+// leading or trailing space would be trimmed out of the key and off the page
+// with it, welding two sentences together. The separators are at the reading
+// sites, which is where `advice.js` had to move its own.
+const COPY = localized({
   nothingYet: 'Nothing is booked yet, so there is nothing to break down.',
-  nothingYetRest: ' These two pictures are drawn from booked lines only: a statement that failed a '
+  nothingYetRest: 'These two pictures are drawn from booked lines only: a statement that failed a '
     + 'check printed on it is archived and never averaged in here, exactly as it is never counted '
     + 'in the four figures at the top of the page.',
   // **The third fact.** The header of this file names two — nothing booked, and
@@ -40,13 +53,13 @@ const COPY = {
   // Balance of somebody's actual money. Two answers on one screen and the wrong
   // one on top, which is §5.25 with the roles swapped.
   nothingHere: 'No booked line falls in this date range.',
-  nothingHereRest: ' The ledger is not empty — widen the range, or set it back to All time, to '
+  nothingHereRest: 'The ledger is not empty — widen the range, or set it back to All time, to '
     + 'see what is in it. The figures above describe this range too, which is why they are zero.',
   failed: 'The breakdown could not be read.',
-  nothingBooked: 'Nothing is booked yet. ',
+  nothingBooked: 'Nothing is booked yet.',
   nothingBookedRest: 'Totals appear once a statement has passed every check printed on it. '
     + 'A statement that fails one is archived and listed below, never averaged in.',
-  months: (count) => `${count} transaction month(s)`,
+  months: (count) => t('{count} transaction month(s)', { count }),
   note: 'Two readings of the same booked lines, grouped by the database and not by this page. '
     + 'Both count booked lines only: a statement that failed a check printed on it is archived '
     + 'and never averaged in here, exactly as it is never counted in the four figures above. '
@@ -57,20 +70,27 @@ const COPY = {
   // only `since`, precisely so a line dated ahead of today is not hidden, and
   // "to now" describes a bound the request does not carry. An open end is said
   // as open.
+  //
+  // The three below are functions, which `localized()` passes through
+  // untouched on purpose -- it looks up strings, and a function is not one.
+  // They call `t()` themselves, which is also what keeps a date and a count
+  // substituted into a sentence rather than looked up in it.
   windowed: (window) => {
     if (window.since && window.until) {
-      return `dated ${window.since} to ${window.until}`;
+      return t('dated {since} to {until}', { since: window.since, until: window.until });
     }
-    return window.since ? `dated ${window.since} onwards` : `dated up to ${window.until}`;
+    return window.since
+      ? t('dated {since} onwards', { since: window.since })
+      : t('dated up to {until}', { until: window.until });
   },
-  buckets: (count) => `${count} bucket(s)`,
+  buckets: (count) => t('{count} bucket(s)', { count }),
   // A balance is a position at the end of the window, not a sum over it, so a
   // window that ends before this ledger begins asks about a day the ledger has
   // no evidence for. The other three figures really are zero — nothing came in,
   // because nothing is in range — and only this one would be a claim.
   balanceUnknown: 'Balance is not shown for this range: nothing in this ledger is dated on or '
     + 'before its end, so there is no evidence of what the account held then.',
-};
+});
 
 /**
  * The analytics panel.
@@ -96,7 +116,7 @@ export function createAnalyticsPanel(options) {
   // Stated by the module that fills these two pictures, so the sentence and the
   // thing it describes cannot drift apart in separate files.
   const head = el('div', 'panel__head');
-  const heading = el('h2', 'panel__title', 'Where it went');
+  const heading = el('h2', 'panel__title', t('Where it went'));
   heading.id = 'analytics-h';
   head.appendChild(heading);
   const countsNode = el('p', 'panel__meta');
@@ -147,28 +167,36 @@ export function createAnalyticsPanel(options) {
     const totals = data && data.totals;
     if (!totals) {
       const box = el('p', 'ledger__empty');
-      box.appendChild(el('strong', '', COPY.nothingBooked));
+      // The separator between the two sentences, outside both of them.
+      box.appendChild(el('strong', '', `${COPY.nothingBooked} `));
       box.appendChild(el('span', '', COPY.nothingBookedRest));
       figuresNode.appendChild(box);
       return;
     }
 
     const grid = el('div', 'ledger__grid');
-    grid.appendChild(figureCell('In', formatMinor(totals.inflow_minor), 'ledger__value--in'));
-    grid.appendChild(figureCell('Out', formatMinor(totals.outflow_minor), 'ledger__value--out'));
-    grid.appendChild(figureCell('Net', formatMinor(totals.net_minor)));
+    grid.appendChild(
+      figureCell(FIGURE.in, formatMinor(totals.inflow_minor), 'ledger__value--in'),
+    );
+    grid.appendChild(
+      figureCell(FIGURE.out, formatMinor(totals.outflow_minor), 'ledger__value--out'),
+    );
+    grid.appendChild(figureCell(FIGURE.net, formatMinor(totals.net_minor)));
     // An em dash, never $0.00, and the reason is said in the line below rather
     // than only to a screen reader: the glyph is what stops the figure being
     // read as an amount, and the sentence is what makes it mean something.
     const balanceKnown = typeof totals.balance_minor === 'number';
-    const balance = figureCell('Balance', balanceKnown ? formatMinor(totals.balance_minor) : '—');
+    const balance = figureCell(
+      FIGURE.balance,
+      balanceKnown ? formatMinor(totals.balance_minor) : '—',
+    );
     if (!balanceKnown) {
       balance.appendChild(el('span', 'visually-hidden', COPY.balanceUnknown));
     }
     grid.appendChild(balance);
     figuresNode.appendChild(grid);
 
-    const parts = [`${totals.txn_count} transaction(s)`];
+    const parts = [t('{count} transaction(s)', { count: totals.txn_count })];
     if (!balanceKnown) {
       parts.push(COPY.balanceUnknown);
     }
@@ -180,10 +208,17 @@ export function createAnalyticsPanel(options) {
     // Flagging a line as a transfer subtracts money from the two figures above,
     // and a count never said how much. Absent entirely when nothing is flagged.
     if (totals.transfer_count) {
+      // `In` and `Out` are the two cells directly above, substituted rather
+      // than written again, so this sentence cannot end up naming them
+      // something the grid does not.
       parts.push(
-        `${totals.transfer_count} transfer(s) excluded: `
-        + `${formatMinor(totals.transfer_excluded_in_minor)} from In, `
-        + `${formatMinor(totals.transfer_excluded_out_minor)} from Out`,
+        t('{count} transfer(s) excluded: {inflow} from {in}, {outflow} from {out}', {
+          count: totals.transfer_count,
+          inflow: formatMinor(totals.transfer_excluded_in_minor),
+          in: FIGURE.in,
+          outflow: formatMinor(totals.transfer_excluded_out_minor),
+          out: FIGURE.out,
+        }),
       );
     }
     figuresNode.appendChild(el('p', 'ledger__foot', parts.join(' · ')));
@@ -216,7 +251,8 @@ export function createAnalyticsPanel(options) {
     clear(emptyNode);
     const box = el('p', 'empty');
     box.appendChild(el('strong', '', booked ? COPY.nothingHere : COPY.nothingYet));
-    box.appendChild(el('span', '', booked ? COPY.nothingHereRest : COPY.nothingYetRest));
+    // Same separator rule as the figures above.
+    box.appendChild(el('span', '', ` ${booked ? COPY.nothingHereRest : COPY.nothingYetRest}`));
     emptyNode.appendChild(box);
   }
 

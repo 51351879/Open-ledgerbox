@@ -28,24 +28,32 @@
 // weekday locally, so its whole day-of-week distribution was off by one.
 
 import { el, option } from './api.js';
+import { localized, t } from './i18n.js';
 
-const COPY = {
-  label: 'Date range',
-  all: 'All time',
-  custom: 'Custom…',
-  from: 'From',
-  to: 'To',
+// `label`, `from` and `to` used to sit here as well. Nothing has ever read
+// them -- `index.html` carries those three labels as markup -- and an unread
+// string is the exact shape that becomes a dictionary entry which can never
+// appear on the page. `all` and `custom` moved into `PRESETS` below, where
+// they are looked up at render time instead of at import time.
+const COPY = localized({
   // **It has to say what the page is showing instead.** Refusing to issue a
   // request for an impossible range is right -- it would paint an error over
   // four figures that are fine. But the controls then read one window while
   // every number below reads another, with nothing on screen connecting them,
   // which is the shape §5.25 records: one screen carrying two answers, and the
   // wrong one on top. So the refusal names the window still in force.
-  invalid: (showing) => 'The start of the range is after its end, so it selects nothing. '
-    + 'Swap the two dates, or clear one of them. Nothing below has changed: the figures, '
-    + `both charts and the table are still showing ${showing}.`,
+  //
+  // A function, which `localized()` passes through untouched: it looks up
+  // strings and a function is not one. It calls `t()` itself, and the window
+  // still in force is substituted into the sentence rather than looked up.
+  invalid: (showing) => t(
+    'The start of the range is after its end, so it selects nothing. Swap the two dates, '
+      + 'or clear one of them. Nothing below has changed: the figures, both charts and '
+      + 'the table are still showing {showing}.',
+    { showing },
+  ),
   whole: 'the whole ledger',
-};
+});
 
 /** The window in force, in words, for the sentence above.
  *
@@ -58,9 +66,11 @@ function describe(span) {
     return COPY.whole;
   }
   if (span.since && span.until) {
-    return `${span.since} to ${span.until}`;
+    return t('{since} to {until}', { since: span.since, until: span.until });
   }
-  return span.since ? `${span.since} onwards` : `everything up to ${span.until}`;
+  return span.since
+    ? t('{since} onwards', { since: span.since })
+    : t('everything up to {until}', { until: span.until });
 }
 
 /** `YYYY-MM-DD` for a local date, with no timezone anywhere near it. */
@@ -103,8 +113,13 @@ function ago({ days = 0, months = 0, years = 0 }, today) {
 
 // Each preset is a function of *today*, so "this year" names the current year
 // rather than a year somebody typed into this file. `since: null` is unbounded.
+//
+// The labels are the English sentences themselves and are looked up in `fill`,
+// not here: this array is built when the module is imported, and `main.js`
+// chooses the language after every module is imported. A label translated at
+// import time would be English for the rest of the page's life.
 const PRESETS = [
-  ['all', COPY.all, () => ({ since: null, until: null })],
+  ['all', 'All time', () => ({ since: null, until: null })],
   // Seven days inclusive of today, which is what "the last week" means to a
   // person: six days back, plus today.
   ['7d', 'Last 7 days', (today) => ({ since: iso(ago({ days: 6 }, today)), until: null })],
@@ -115,11 +130,12 @@ const PRESETS = [
   [
     'ytd',
     // Labelled with the year itself, so the option says what it will do rather
-    // than requiring the reader to know what "this year" resolves to.
+    // than requiring the reader to know what "this year" resolves to. This
+    // string is therefore never displayed and has no dictionary entry.
     'This year',
     (today) => ({ since: `${today.getFullYear()}-01-01`, until: null }),
   ],
-  ['custom', COPY.custom, () => ({ since: null, until: null })],
+  ['custom', 'Custom…', () => ({ since: null, until: null })],
 ];
 
 const UNBOUNDED = { since: null, until: null };
@@ -168,7 +184,9 @@ export function createDateRange(options) {
       return;
     }
     for (const [value, label] of PRESETS.map(([v, l]) => [v, l])) {
-      select.appendChild(option(value, value === 'ytd' ? String(today.getFullYear()) : label));
+      select.appendChild(
+        option(value, value === 'ytd' ? String(today.getFullYear()) : t(label)),
+      );
     }
     select.value = 'all';
   }

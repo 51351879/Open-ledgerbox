@@ -77,10 +77,10 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
   const note = el(
     'p',
     'panel__note',
-    // Quotes a label the transaction filter still renders in English, so it has
-    // no dictionary entry yet: prose in one language pointing at a control in
-    // another sends the reader looking for something that is not on the page.
-    // It goes through `t()` now, so the entry is the only thing still missing.
+    // Quotes `Nothing claimed this`, the transaction filter's label for a line
+    // no rule answered for. A dictionary may translate this paragraph only
+    // while it also translates that label, or the sentence sends the reader
+    // looking for a control that is not on the page under that name.
     t(
       'This panel only lists suggestions the Agent submitted. A zero pending count does not '
         + 'mean every candidate was classified: suggestions the Agent omitted stay under '
@@ -274,7 +274,8 @@ export function createProposalPanel({ root, onChange = () => {}, services = defa
         el(
           'p',
           'empty',
-          // Also quotes the filter's English label; see the note above.
+          // Quotes the same filter label as the note above, under the same
+          // condition: the two move together or neither moves.
           t(
             'This run has no pending proposals. That only means every submitted suggestion was '
               + 'reviewed. Candidates the Agent omitted never appear in this run; find them '

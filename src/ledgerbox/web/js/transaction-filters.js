@@ -24,6 +24,7 @@
 import { clear, el, fetchCategories, fetchStatements, isOffline, option } from './api.js';
 // One definition of which colour a category takes, shared with the donut.
 import { tonesOf } from './category-tones.js';
+import { localized, t } from './i18n.js';
 
 // The server's sentinel for "nothing claimed this line", spelled here because a
 // wire value has to be spelled on both sides of a wire. The parentheses are not
@@ -32,7 +33,12 @@ import { tonesOf } from './category-tones.js';
 // can ever declare a category that this filter would silently answer for.
 const NO_CATEGORY = '(none)';
 
-const COPY = {
+// Looked up as each sentence is read. Everything else on this bar is
+// translated at its own call site rather than inside `labelled` or
+// `selectControl`: those helpers also receive values that came out of this
+// object, and looking a translated sentence up a second time would report a
+// gap for a sentence that was answered.
+const COPY = localized({
   anyMonth: 'Any month',
   anyCategory: 'Any category',
   // Not a category and never rendered as one: there is no `uncategorized` row
@@ -41,7 +47,7 @@ const COPY = {
   noCategory: 'Nothing claimed this',
   monthsFailed: 'The month filter is empty as a result; every other control still works.',
   categoriesFailed: 'No category can be chosen or filtered for until that succeeds.',
-};
+});
 
 // The controls, by the `data-txn` name the markup gives them. The two that are
 // not plain strings on the wire — the transfer tri-state and the sort direction
@@ -97,37 +103,40 @@ export function renderFilterControls(root) {
   }
   clear(host);
   host.setAttribute('role', 'group');
-  host.setAttribute('aria-label', 'Filter and sort the transactions');
+  host.setAttribute('aria-label', t('Filter and sort the transactions'));
 
   const search = named(el('input', 'control__field'), 'q');
   search.type = 'search';
   search.maxLength = 200;
-  search.placeholder = 'part of a description';
-  host.appendChild(labelled("Search the bank's line", search, true));
+  search.placeholder = t('part of a description');
+  host.appendChild(labelled(t("Search the bank's line"), search, true));
 
   // Statement month narrows this table only. The page-wide date range asks a
   // different question -- when money moved -- and is owned by the header.
-  host.appendChild(selectControl('month', 'Month', [['', COPY.anyMonth]]));
+  host.appendChild(selectControl('month', t('Month'), [['', COPY.anyMonth]]));
 
   // `(none)` is a server sentinel, not a category; its punctuation keeps it
   // outside the grammar of every category id the rules may declare.
-  host.appendChild(selectControl('category', 'Category', [
+  host.appendChild(selectControl('category', t('Category'), [
     ['', COPY.anyCategory], [NO_CATEGORY, COPY.noCategory],
   ]));
-  host.appendChild(selectControl('transfer', 'Transfers', [
-    ['', 'Included'], ['true', 'Only transfers'], ['false', 'Excluding transfers'],
+  host.appendChild(selectControl('transfer', t('Transfers'), [
+    ['', t('Included')], ['true', t('Only transfers')], ['false', t('Excluding transfers')],
   ]));
-  host.appendChild(selectControl('direction', 'Direction', [
-    ['', 'Either way'], ['in', 'Into the account'], ['out', 'Out of the account'],
+  host.appendChild(selectControl('direction', t('Direction'), [
+    ['', t('Either way')], ['in', t('Into the account')], ['out', t('Out of the account')],
   ]));
-  host.appendChild(selectControl('sort', 'Sort by', [
-    ['date', 'Date'], ['amount', 'Amount'], ['description', 'Description'],
-    ['category', 'Category'], ['month', 'Statement month'],
+  host.appendChild(selectControl('sort', t('Sort by'), [
+    ['date', t('Date')], ['amount', t('Amount')], ['description', t('Description')],
+    ['category', t('Category')], ['month', t('Statement month')],
   ]));
-  host.appendChild(selectControl('order', 'Order', [
-    ['desc', 'Descending'], ['asc', 'Ascending'],
+  host.appendChild(selectControl('order', t('Order'), [
+    ['desc', t('Descending')], ['asc', t('Ascending')],
   ]));
-  const reset = named(el('button', 'btn btn--quiet control__reset', 'Clear filters'), 'reset');
+  const reset = named(
+    el('button', 'btn btn--quiet control__reset', t('Clear filters')),
+    'reset',
+  );
   reset.type = 'button';
   host.appendChild(reset);
   return host;
@@ -135,9 +144,12 @@ export function renderFilterControls(root) {
 
 /** `[{label, ids}]` for the kinds this ledger actually has categories for. */
 function groupsOf(categories) {
+  // The kind names are looked up here rather than in `KINDS`, which is built
+  // when this module is imported and would keep whatever language was active
+  // then -- English, since `main.js` chooses after every import.
   return KINDS
     .map(([kind, label]) => ({
-      label,
+      label: t(label),
       ids: (categories || []).filter((row) => row.kind === kind).map((row) => row.id),
     }))
     .filter((group) => group.ids.length > 0);
@@ -253,7 +265,12 @@ export function createFilters(options) {
         months.push(row.statement_month);
       }
     }
-    refill(control.month, state.month, [['', COPY.anyMonth]], [{ label: 'Month', ids: months }]);
+    refill(
+      control.month,
+      state.month,
+      [['', COPY.anyMonth]],
+      [{ label: t('Month'), ids: months }],
+    );
     state.month = control.month.value;
   }
 

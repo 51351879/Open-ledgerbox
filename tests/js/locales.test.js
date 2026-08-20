@@ -20,7 +20,7 @@ import {
   setLocale,
   t,
 } from '../../src/ledgerbox/web/js/i18n.js';
-import { DICTIONARIES } from '../../src/ledgerbox/web/js/locales/all.js';
+import { DICTIONARIES, PARTS } from '../../src/ledgerbox/web/js/locales/all.js';
 
 const WEB = new URL('../../src/ledgerbox/web/', import.meta.url);
 
@@ -78,17 +78,39 @@ test('every locale file beside all.js is registered by it', async () => {
 
   assert.ok(files.length > 0);
   for (const name of files) {
-    const tag = name.replace(/\.js$/, '');
+    // `<tag>.<region>.js`: a language too long for one file arrives in
+    // several, and the tag is the part in front of the first dot. No BCP-47
+    // tag contains one, so this cannot swallow part of a language's name.
+    const tag = name.split('.')[0];
     assert.ok(all.includes(`./${name}`), `locales/all.js does not import ${name}`);
     assert.ok(tag in DICTIONARIES, `locales/all.js imports ${name} but never registers ${tag}`);
   }
+});
+
+test('no sentence is answered twice for one language', () => {
+  // Splitting a dictionary across files buys the 400-line rule and costs
+  // this: the same English sentence in two of them is two answers to one
+  // question, and which one the page shows is decided by the order
+  // `all.js` happens to import in. The merge is silent about it, so this
+  // is not.
+  const twice = [];
+  for (const [tag, parts] of Object.entries(PARTS)) {
+    const seen = new Set();
+    for (const part of parts) {
+      for (const key of Object.keys(part)) {
+        if (seen.has(key)) twice.push(`${tag}: ${key}`);
+        seen.add(key);
+      }
+    }
+  }
+  assert.deepEqual(twice, []);
 });
 
 for (const tag of SHIPPED) {
   test(`${tag} translates only sentences the interface really contains`, async () => {
     const haystack = await interfaceText();
     const keys = dictionaryOf(tag);
-    assert.ok(keys.length > 0, `locales/${tag}.js is empty`);
+    assert.ok(keys.length > 0, `the dictionary for ${tag} is empty`);
 
     const invented = keys.filter((key) => !haystack.includes(normalize(key)));
     assert.deepEqual(
