@@ -219,4 +219,54 @@ export const zhCNPanels = {
     '有 {count} 个文件无法从磁盘上删除。在它们消失之前，`ledgerbox doctor` 会报告它们，'
     + '并以非零码退出：',
   '{range} matched, {total} in all': '{range}匹配；全部 {total} 份',
+  // Deleting a statement: what goes, what no rebuild brings back, and what the
+  // figures become. `archive/` and `ledgerbox doctor` are a path and a command.
+  ['Decisions, not documents. `archive/` never held them, so re-ingesting the same bytes brings '
+    + 'the transactions back and not these.']:
+    '是决定，不是文档。`archive/` 从来没有保存过它们，所以重新导入同样的字节能把交易带回来，'
+    + '却带不回这些。',
+  ['Nothing here is a decision or review history — no hand-set category, Agent proposal, '
+    + 'resolved or dismissed review item — so re-ingesting the same file would restore all of '
+    + 'it.']:
+    '这里没有任何决定或审阅历史——没有手工设置的类别、没有 Agent 提案、'
+    + '没有已处理或已搁置的待审项——所以重新导入同一个文件会把它们全部恢复。',
+  'No simulated check fails afterwards.': '之后没有任何模拟检查失败。',
+  ['— afterwards no posting of an account you own is left, so the ledger has no balance to '
+    + 'report rather than a balance of zero.']:
+    '——之后不再有任何属于你自己账户的分录，所以账本没有余额可报，而不是余额为零。',
+  ['A month taken out of the middle of a run leaves the balances printed after it with nothing '
+    + 'to replay from. That is the ledger reporting a real hole, not a fault in the deletion.']:
+    '从一段连续账期中间拿掉一个月，会让印在它之后的余额没有东西可以重放。'
+    + '那是账本在报告一个真实的空洞，不是删除本身的毛病。',
+  'The archived PDF is already missing from disk.': '归档的 PDF 已经不在磁盘上了。',
+  'This statement cannot be deleted.': '这份账单无法删除。',
+  'That statement is no longer in the ledger.': '那份账单已经不在账本里了。',
+  'The deletion could not be prepared.': '无法准备这次删除。',
+  'The statement could not be deleted.': '无法删除这份账单。',
+  // The nouns counted in the two lists. Each begins with its measure word, so
+  // `3` and the noun read as one phrase the way the English `3 posting(s)` does.
+  'posting(s)': '条分录',
+  'transaction identity row(s)': '条交易身份记录',
+  'raw record(s)': '条原始记录',
+  'review queue item(s)': '条待审队列项',
+  'balance assertion(s) removed': '条余额断言被移除',
+  'balance assertion(s) kept, provenance moved': '条余额断言保留、来源已转移',
+  'hand-made category decision(s)': '条手工作出的类别决定',
+  'resolved or dismissed review item(s)': '条已处理或已搁置的待审项',
+  'Agent proposal outcome(s)': '条 Agent 提案结果',
+  'Agent proposal run(s) becoming empty': '个将变为空的 Agent 提案轮次',
+  'Agent triage outcome(s)': '条 Agent 分流结果',
+  'Agent triage run(s) becoming empty': '个将变为空的 Agent 分流轮次',
+  and: '和',
+  '{list} go with it.': '{list} 会跟着一起消失。',
+  '{count} check(s) fail afterwards:': '之后会有 {count} 项检查失败：',
+  'not known': '不详',
+  'ledger transactions {before} → {after}': '账本交易 {before} → {after}',
+  'Delete {what}? {count} transaction(s) leave the ledger.':
+    '删除 {what}？{count} 笔交易会离开账本。',
+  'this statement': '这份账单',
+  Close: '关闭',
+  'Delete now': '立即删除',
+  'Keep it': '保留',
+  'Delete…': '删除…',
 };

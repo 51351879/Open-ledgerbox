@@ -29,29 +29,36 @@
 // ritual for safety. The irreversible part is the sentence on the button.
 
 import { button, clear, el, option, updateManyCategories } from './api.js';
+import { localized, t } from './i18n.js';
 
-const COPY = {
-  lead: (count) => `${count} line(s) selected`,
-  selectAll: (count) => `Select all ${count} matching`,
-  selectPage: 'Select every line on this page',
+// `selectPage` used to sit here as well and nothing has ever read it; the row
+// module owns that label. An unread string is the exact shape that becomes a
+// dictionary entry which can never appear on the page.
+//
+// The functions are passed through by `localized()` untouched -- it looks up
+// strings, and a function is not one -- and call `t()` themselves. Counts and
+// the category id are substituted into their sentences, never looked up.
+const COPY = localized({
+  lead: (count) => t('{count} line(s) selected', { count }),
+  selectAll: (count) => t('Select all {count} matching', { count }),
   clear: 'Clear selection',
   pick: 'Say they are',
   letRules: 'Let the rules decide',
   apply: (count, what) => (what === null
-    ? `Withdraw ${count} decision(s)`
-    : `Mark ${count} line(s) as ${what}`),
+    ? t('Withdraw {count} decision(s)', { count })
+    : t('Mark {count} line(s) as {what}', { count, what })),
   // Said on the control, before it is pressed. The count comes from what the
   // table already knows about each row, so this costs no request and cannot be
   // out of date with the rows a person is looking at.
-  replaces: (count) => `${count} of these carry a category you set by hand. Applying replaces `
-    + 'it, and withdrawing afterwards hands the line to the rules rather than back to that '
-    + 'category.',
-  tooMany: (count, cap) => `This filter matches ${count} line(s), which is more than the ${cap} `
-    + 'one request may name. Narrow it — by month, by direction, or by searching — and the '
-    + 'button will offer the rest.',
+  replaces: (count) => t('{count} of these carry a category you set by hand. Applying '
+    + 'replaces it, and withdrawing afterwards hands the line to the rules rather than '
+    + 'back to that category.', { count }),
+  tooMany: (count, cap) => t('This filter matches {count} line(s), which is more than the '
+    + '{cap} one request may name. Narrow it — by month, by direction, or by searching — '
+    + 'and the button will offer the rest.', { count, cap }),
   failed: 'Nothing was changed.',
   working: 'Working…',
-};
+});
 
 /** The ceiling the server enforces, spelled here because a wire limit has two
  *  sides. `schemas.MAX_BULK_TRANSACTIONS` is the same number and is itself

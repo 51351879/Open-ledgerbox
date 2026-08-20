@@ -41,10 +41,14 @@
 // at them.
 
 import { clear, el, formatMinor } from './api.js';
+import { localized, t } from './i18n.js';
 import { attr, niceStep, svgFactory } from './charts.js';
 import { createChartTooltip } from './chart-tooltip.js';
 
-const COPY = {
+// `keyIn` and `keyOut` used to sit here and nothing has ever read them:
+// `index.html` carries those two legend labels as markup. An unread string is
+// the exact shape that becomes a dictionary entry which can never appear.
+const COPY = localized({
   noMonth: 'no month',
   noMonthNote: '“no month” is a booked line the server returned with no month on it. It is drawn '
     + 'as its own column at the end rather than dropped, because a column that is not there is a '
@@ -52,16 +56,18 @@ const COPY = {
   monthKey: 'Columns are transaction months — when the money moved. The Month filter on the table '
     + 'below is the statement month, which is the statement a line was printed on, and the two '
     + 'differ for a line near a period boundary.',
-  thinned: (shown, total) => `Only ${shown} of ${total} month labels are drawn, so they do not `
-    + 'overlap. Every month is in the table below, labelled.',
+  // A function, passed through by `localized()` untouched and calling `t()`
+  // itself: the two counts are substituted, never looked up.
+  thinned: (shown, total) => t('Only {shown} of {total} month labels are drawn, so they '
+    + 'do not overlap. Every month is in the table below, labelled.', { shown, total }),
   gridNote: 'Gridlines are money, the middle line is zero. In is drawn above it and out below, on '
     + 'one shared scale.',
-  keyIn: 'In, above the line',
-  keyOut: 'Out, below the line',
   totals: 'All months',
   empty: 'No month has a booked line yet.',
-};
+});
 
+// Looked up where the header is drawn, not here: this array is built at import
+// time and `main.js` chooses the language after every module is imported.
 const COLUMNS = [
   ['Transaction month', 'chart-table__month'],
   ['In', 'chart-table__num'],
@@ -144,19 +150,23 @@ function figures(row) {
   return {
     title: label(row),
     rows: [
-      ['In', formatMinor(row.inflow_minor)],
-      ['Out', formatMinor(row.outflow_minor)],
-      ['Net', formatMinor(row.net_minor)],
-      ['Lines', String(row.txn_count)],
+      [t('In'), formatMinor(row.inflow_minor)],
+      [t('Out'), formatMinor(row.outflow_minor)],
+      [t('Net'), formatMinor(row.net_minor)],
+      [t('Lines'), String(row.txn_count)],
     ],
   };
 }
 
 /** The same four as one sentence, for whoever has the column focused. */
 function spoken(row) {
-  return `${label(row)}: in ${formatMinor(row.inflow_minor)}, `
-    + `out ${formatMinor(row.outflow_minor)}, net ${formatMinor(row.net_minor)}, `
-    + `${row.txn_count} line(s).`;
+  return t('{month}: in {inflow}, out {outflow}, net {net}, {count} line(s).', {
+    month: label(row),
+    inflow: formatMinor(row.inflow_minor),
+    outflow: formatMinor(row.outflow_minor),
+    net: formatMinor(row.net_minor),
+    count: row.txn_count,
+  });
 }
 
 /** The figures as a table: the same rows, the server's own totals underneath.
@@ -173,7 +183,7 @@ function tableNode(rows, monthly) {
   const head = el('thead');
   const headRow = el('tr');
   for (const [text, className] of COLUMNS) {
-    const cell = el('th', className, text);
+    const cell = el('th', className, t(text));
     cell.scope = 'col';
     headRow.appendChild(cell);
   }
@@ -354,11 +364,10 @@ export function createMonthlyChart(root) {
     // still read; each column then carries its own four figures.
     attr(shell, {
       role: 'group',
-      'aria-label':
-        `Bar chart of money in and out for ${rows.length} transaction month(s), ${first} to `
-        + `${last}. In is drawn above a zero line and out below it, on one shared scale. Each `
-        + 'column can be focused for its own figures, and every figure in it is in the table '
-        + 'under the chart.',
+      'aria-label': t('Bar chart of money in and out for {count} transaction month(s), '
+        + '{first} to {last}. In is drawn above a zero line and out below it, on one '
+        + 'shared scale. Each column can be focused for its own figures, and every figure '
+        + 'in it is in the table under the chart.', { count: rows.length, first, last }),
     });
 
     if (noteBox) {

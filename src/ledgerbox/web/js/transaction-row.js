@@ -37,10 +37,11 @@
 import {
   button, clear, el, formatMinor, join, option, updateTransactionCategory,
 } from './api.js';
+import { localized, t } from './i18n.js';
 
 // Every sentence a person reads in a row, in one place, because rule 11 binds
 // them alike: none may read stronger than the evidence behind it.
-const COPY = {
+const COPY = localized({
   letRules: 'Let the rules decide',
   noCategory: 'No category: nothing claimed this line.',
   byRule: 'set by a rule',
@@ -65,11 +66,16 @@ const COPY = {
     + 'table were measured before this change.',
   reread: 'Re-read the table',
   pickAll: 'Select every line on this page',
-  pick: (date, amount) => `Select the line dated ${date} for ${amount}`,
-};
+  // A function, which `localized()` passes through untouched; it looks up
+  // strings and a function is not one. The date and the amount are
+  // substituted into the sentence, never looked up in it.
+  pick: (date, amount) => t('Select the line dated {date} for {amount}', { date, amount }),
+});
 
 // Fixed here so the header and the body cannot drift apart: both are built in
 // this module, from this list, and `colSpan` on the notice row reads its length.
+// The labels are looked up in `headerRow`: this array is built at import time,
+// and `main.js` chooses the language after every module is imported.
 const COLUMNS = [
   // First, and its header is a switch for the page rather than a word: a
   // checkbox column whose header is a label is a column you cannot use without
@@ -95,7 +101,7 @@ export const COLUMN_COUNT = COLUMNS.length;
 export function headerRow(context) {
   const row = el('tr');
   for (const [label, className] of COLUMNS) {
-    const head = el('th', className, label);
+    const head = el('th', className, label ? t(label) : label);
     head.scope = 'col';
     row.appendChild(head);
   }
@@ -250,7 +256,10 @@ function pickerCell(txn, context, apply) {
   const select = el('select', 'picker');
   select.setAttribute(
     'aria-label',
-    `Category for ${txn.date} ${formatMinor(txn.amount_minor)}`,
+    t('Category for {date} {amount}', {
+      date: txn.date,
+      amount: formatMinor(txn.amount_minor),
+    }),
   );
   select.appendChild(option('', COPY.letRules));
   for (const group of groups) {
@@ -303,7 +312,7 @@ export function createRow(txn, context) {
     }
     noteCell.appendChild(join(
       el('div', 'notice__actions'),
-      button('btn btn--quiet', 'Dismiss', clearNote),
+      button('btn btn--quiet', t('Dismiss'), clearNote),
     ));
     note.hidden = false;
   }

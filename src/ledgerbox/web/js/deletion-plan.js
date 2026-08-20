@@ -26,8 +26,9 @@ import {
   ApiError, button, clear, deleteStatement, el,
   fetchDeletionPlan, formatMinor, join,
 } from './api.js';
+import { localized, t } from './i18n.js';
 
-export const PLAN_COPY = {
+export const PLAN_COPY = localized({
   losses: 'Decisions, not documents. `archive/` never held them, so re-ingesting the same '
     + 'bytes brings the transactions back and not these.',
   // Said, not left out. The CLI and the 409 both state this in both directions;
@@ -39,7 +40,10 @@ export const PLAN_COPY = {
     + 'proposal, resolved or dismissed review item — so re-ingesting the same file would '
     + 'restore all of it.',
   noFailure: 'No simulated check fails afterwards.',
-  balanceGone: ' — afterwards no posting of an account you own is left, so the ledger has no '
+  // The dash before this used to be inside it. Keys are whitespace-normalised
+  // and English reads through the same lookup, so a leading space is trimmed
+  // out of the key and off the page; the separator is at the reading site.
+  balanceGone: '— afterwards no posting of an account you own is left, so the ledger has no '
     + 'balance to report rather than a balance of zero.',
   midRun: 'A month taken out of the middle of a run leaves the balances printed after it with '
     + 'nothing to replay from. That is the ledger reporting a real hole, not a fault in the '
@@ -49,11 +53,12 @@ export const PLAN_COPY = {
   vanished: 'That statement is no longer in the ledger.',
   planFailed: 'The deletion could not be prepared.',
   deleteFailed: 'The statement could not be deleted.',
-};
+});
 
 // The decision/audit fields are deliberately absent: all
 // are reported on their own, above the rest, because they are the row types no
-// rebuild brings back.
+// rebuild brings back. The nouns are looked up where they are read: both lists
+// are built at import time and `main.js` chooses the language afterwards.
 const IMPACT_ROWS = [
   ['postings', 'posting(s)'],
   ['txn_identities', 'transaction identity row(s)'],
@@ -81,7 +86,7 @@ function impactNode(impact) {
   const list = el('ul', 'plan__items');
   for (const [key, label] of IMPACT_ROWS) {
     if ((impact[key] || 0) > 0) {
-      list.appendChild(join(el('li'), el('span', 'num', String(impact[key])), ` ${label}`));
+      list.appendChild(join(el('li'), el('span', 'num', String(impact[key])), ` ${t(label)}`));
     }
   }
   return list.firstChild ? list : null;
@@ -90,11 +95,14 @@ function impactNode(impact) {
 function lossesNode(impact) {
   const parts = LOSSES
     .filter(([key]) => (impact[key] || 0) > 0)
-    .map(([key, label]) => `${impact[key]} ${label}`);
+    .map(([key, label]) => `${impact[key]} ${t(label)}`);
   if (parts.length === 0) {
     return el('p', 'notice__text muted', PLAN_COPY.noLosses);
   }
-  const lead = el('strong', '', `${parts.join(' and ')} go with it. `);
+  // The conjunction and the trailing separator are their own; the list is
+  // substituted into the sentence rather than the sentence being pasted on.
+  const list = parts.join(` ${t('and')} `);
+  const lead = el('strong', '', `${t('{list} go with it.', { list })} `);
   return join(el('p', 'plan__loss'), lead, PLAN_COPY.losses);
 }
 
@@ -104,12 +112,16 @@ function checksNode(plan) {
   if (failing.length === 0) {
     wrap.appendChild(el('p', 'notice__text', PLAN_COPY.noFailure));
   } else {
-    wrap.appendChild(el('p', 'notice__text', `${failing.length} check(s) fail afterwards:`));
+    wrap.appendChild(el(
+      'p',
+      'notice__text',
+      t('{count} check(s) fail afterwards:', { count: failing.length }),
+    ));
     const list = el('ul', 'plan__items');
     for (const check of failing) {
       // Check messages are built from statement text: third-party influenced, and
       // textContent is the whole defence.
-      const name = el('code', 'plan__check', check.check_id || 'unknown check');
+      const name = el('code', 'plan__check', check.check_id || t('unknown check'));
       list.appendChild(join(el('li'), name, ' — ', el('span', '', check.message || '')));
     }
     wrap.appendChild(list);
@@ -143,7 +155,7 @@ function balanceNode(minor) {
   // other at a glance.
   return typeof minor === 'number'
     ? el('span', 'num money', formatMinor(minor))
-    : el('span', 'muted', 'not known');
+    : el('span', 'muted', t('not known'));
 }
 
 function totalsNode(plan) {
@@ -153,14 +165,17 @@ function totalsNode(plan) {
     return null;
   }
   const node = join(el('p', 'plan__totals'),
-    'Balance ', balanceNode(before.balance_minor),
+    `${t('Balance')} `, balanceNode(before.balance_minor),
     ' → ', balanceNode(after.balance_minor),
-    `, ledger transactions ${before.txn_count} → ${after.txn_count}`);
+    `, ${t('ledger transactions {before} → {after}', {
+      before: before.txn_count,
+      after: after.txn_count,
+    })}`);
   // Said rather than left as two words. Deleting the last statement takes the
   // last own-account posting with it, and "not known" on its own reads like a
   // failure to look rather than like the absence of anything to look at.
   if (typeof after.balance_minor !== 'number') {
-    node.appendChild(el('span', '', PLAN_COPY.balanceGone));
+    node.appendChild(el('span', '', ` ${PLAN_COPY.balanceGone}`));
   }
   return node;
 }
@@ -172,8 +187,10 @@ function totalsNode(plan) {
  * what buttons sit under it.
  */
 export function planBody(plan) {
-  const lead = `Delete ${plan.statement_month || 'this statement'}? `
-    + `${plan.impact.txns} transaction(s) leave the ledger.`;
+  const lead = t('Delete {what}? {count} transaction(s) leave the ledger.', {
+    what: plan.statement_month || t('this statement'),
+    count: plan.impact.txns,
+  });
   const nodes = [el('p', 'notice__text', lead)];
   for (const part of [impactNode(plan.impact), lossesNode(plan.impact), totalsNode(plan)]) {
     if (part) {
@@ -245,7 +262,7 @@ export function deleteControl(statement, hooks) {
     } else if (message) {
       box.appendChild(el('p', 'notice__text', message));
     }
-    buttonRow(box, button('btn btn--quiet', 'Close', reset));
+    buttonRow(box, button('btn btn--quiet', t('Close'), reset));
   }
 
   function propose(plan, serverNote) {
@@ -259,8 +276,8 @@ export function deleteControl(statement, hooks) {
     if (plan.archive_file_present === false) {
       box.appendChild(el('p', 'notice__text muted', PLAN_COPY.archiveGone));
     }
-    buttonRow(box, button('btn btn--danger', 'Delete now', remove),
-      button('btn btn--quiet', 'Keep it', reset));
+    buttonRow(box, button('btn btn--danger', t('Delete now'), remove),
+      button('btn btn--quiet', t('Keep it'), reset));
   }
 
   function handle(error, fallback) {
@@ -314,7 +331,7 @@ export function deleteControl(statement, hooks) {
     }
   }
 
-  actions.appendChild(button('btn btn--quiet', 'Delete…', () => ask(null)));
+  actions.appendChild(button('btn btn--quiet', t('Delete…'), () => ask(null)));
   wrap.appendChild(actions);
   wrap.appendChild(notice);
   return wrap;
